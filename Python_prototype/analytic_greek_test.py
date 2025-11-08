@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.special import ndtr
 
-from analytic_greeks import (
+from black_scholes import (
     Phi_real,
     phi,
     _log_F_over_K,

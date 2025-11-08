@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import numpy as np
 
-from analytic_greeks import delta_call, Gamma
-from classical_forward_differences import (
+from black_scholes import (
+    Gamma,
     bs_price_call,
+    delta_call,
     delta_forward,
     gamma_forward,
 )
