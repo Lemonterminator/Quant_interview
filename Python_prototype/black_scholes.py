@@ -1,4 +1,18 @@
-"""Unified Black-Scholes analytics, finite differences, and complex-step Greeks."""
+"""Unified Black-Scholes analytics, finite differences, and complex-step Greeks.
+
+This module provides:
+  - Analytic Black–Scholes pricing/Greeks with numerically robust building blocks.
+  - Classical finite-difference estimators (forward delta, 3-point gamma).
+  - Complex-step estimators for first/second derivatives, including a 45° scheme.
+
+Design + numerical notes (high level):
+  - We compute log(F/K) via a log1p branch when F≈K to avoid catastrophic
+    cancellation; this is used everywhere d1 or the intrinsic value depends on ln(F/K).
+  - Guard divisions (e.g., σ√T) and branch on degenerate cases (σ√T→0) to fall
+    back to intrinsic value or ±∞ limits for d1; this keeps vectorized code safe.
+  - Complex-step paths keep the imaginary component intact at O(h) accuracy and
+    avoid real-axis subtractive cancellation entirely, which stabilizes ∆ and Γ.
+"""
 
 from __future__ import annotations
 
@@ -15,19 +29,27 @@ LOG_SQRT_2PI = 0.91893853320467274178
 
 
 def Phi_real(z: np.ndarray) -> np.ndarray:
-    """Standard normal CDF Phi(z) using erfc for good tail behavior."""
+    """Standard normal CDF Phi(z) using erfc for good tail behavior.
+
+    Using erfc avoids exp(-z^2/2) underflow in the far tails and gives good
+    relative accuracy for |z|≫1 compared to a naive integral/series.
+    """
     z = np.asarray(z, dtype=np.float64)
     return 0.5 * erfc(-z * INV_SQRT_2)
 
 
 def phi(z: np.ndarray) -> np.ndarray:
-    """Standard normal PDF phi(z)."""
+    """Standard normal PDF phi(z). Simple exponential with 1/√(2π) factor."""
     z = np.asarray(z, dtype=np.float64)
     return INV_SQRT_2PI * np.exp(-0.5 * z**2)
 
 
 def _log_F_over_K(F: np.ndarray, K: np.ndarray, eps: float = 1e-12) -> np.ndarray:
-    """Vectorized, numerically-stable log(F/K) with log1p trick near F ≈ K."""
+    """Vectorized, numerically-stable log(F/K) with log1p trick near F ≈ K.
+
+    When F≈K we evaluate log(1 + (F-K)/K) to reduce cancellation error. The
+    implementation is branchless over arrays using boolean masks.
+    """
     F = np.asarray(F, dtype=np.float64)
     K = np.asarray(K, dtype=np.float64)
 
@@ -68,9 +90,12 @@ def delta_call(
     sigma = np.asarray(sigma, dtype=np.float64)
     T = np.asarray(T, dtype=np.float64)
 
+    # Compute forward price F = S * exp((r-q)T) ensuring we propagate arrays
     F = S * np.exp((r - q) * T)
     ln = _log_F_over_K(F, K, eps=1e-12)
 
+    # d1 = (ln(F/K) + 0.5 σ²T) / (σ√T); guard division when T=0 or σ=0.
+    # If σ√T==0, we assign d1 the appropriate ±∞ sign so Phi(d1) returns 0/1.
     num = ln + 0.5 * (sigma * sigma) * T
     den = sigma * np.sqrt(T)
 
@@ -103,6 +128,7 @@ def Gamma(
     Tpos = np.maximum(T, 0.0)
     sT = sigma * np.sqrt(Tpos)
 
+    # Default Γ=0 for degenerate inputs; we fill in the valid subset below.
     out = np.zeros_like(S, dtype=np.float64)
 
     mask = (S > 0.0) & (sigma > 0.0) & (Tpos > 0.0)
@@ -119,9 +145,11 @@ def Gamma(
         sT[mask],
     )
 
+    # analytically evaluate phi(d1) in log-space for numerical stability
     F = Sm * np.exp((rm - qm) * Tm)
     ln = _log_F_over_K(F, Km, eps=1e-12)
     d1 = (ln + 0.5 * sigm * sigm * Tm) / sTm
+    # Evaluate φ(d1) in log-space to avoid under/overflow in the tails.
     log_phi_d1 = -0.5 * d1 * d1 - LOG_SQRT_2PI
     phi_d1 = np.exp(log_phi_d1)
 
@@ -130,7 +158,11 @@ def Gamma(
 
 
 def gamma_ref(S, K, r, q, sigma, T, **kwargs):
-    """Scalar reference for gamma; useful for testing."""
+    """Scalar reference for gamma; useful for testing and debugging.
+
+    Mirrors Gamma() logic in scalar form with explicit branching; handy for
+    unit tests and to sanity-check vectorized edge cases.
+    """
 
     S = float(S)
     K = float(K)
@@ -172,18 +204,20 @@ def bs_price_call(
     sigma = np.asarray(sigma, dtype=np.float64)
     T = np.asarray(T, dtype=np.float64)
 
-    DF = np.exp(-r * T)
+    DF = np.exp(-r * T)  # discount factor
     F = S * np.exp((r - q) * T)
     sT = sigma * np.sqrt(np.maximum(T, 0.0))
 
     out = np.empty_like(DF)
 
+    # Degenerate branch: σ√T=0 → price collapses to discounted intrinsic value.
     zero_mask = sT == 0.0
     if np.any(zero_mask):
         out[zero_mask] = DF[zero_mask] * np.maximum(F[zero_mask] - K[zero_mask], 0.0)
 
     pos_mask = ~zero_mask
     if np.any(pos_mask):
+        # Stable log(F/K) and usual d1/d2 definitions.
         ln_F_over_K = _log_F_over_K(F[pos_mask], K[pos_mask], eps=1e-12)
         d1 = (ln_F_over_K + 0.5 * sigma[pos_mask] * sigma[pos_mask] * T[pos_mask]) / sT[pos_mask]
         d2 = d1 - sT[pos_mask]
@@ -201,7 +235,11 @@ def delta_forward(
     T: np.ndarray,
     h: float = 1e-5,
 ) -> np.ndarray:
-    """Delta via classical forward difference: [C(S+h)-C(S)]/h."""
+    """Delta via classical forward difference: [C(S+h)-C(S)]/h.
+
+    Sensitive to the usual truncation vs. roundoff trade-off. In practice,
+    small h suffers from subtractive cancellation; large h increases truncation.
+    """
 
     S = np.asarray(S, dtype=np.float64)
     K = np.asarray(K, dtype=np.float64)
@@ -224,7 +262,11 @@ def gamma_forward(
     T: np.ndarray,
     h: float = 1e-5,
 ) -> np.ndarray:
-    """Gamma via classical forward difference: [C(S+2h)-2C(S+h)+C(S)]/h^2."""
+    """Gamma via classical forward difference: [C(S+2h)-2C(S+h)+C(S)]/h^2.
+
+    This 3-point forward stencil is particularly sensitive to cancellation,
+    since C(S+2h), C(S+h), C(S) become nearly equal as h→0.
+    """
 
     S = np.asarray(S, dtype=np.float64)
     K = np.asarray(K, dtype=np.float64)
@@ -254,9 +296,9 @@ def Phi_t(z):
     Type-dispatched standard normal CDF that preserves complex-step accuracy.
 
     Real inputs defer to Phi_real. For complex inputs we use the complex-step
-    expansion Phi(a + i b) ≈ Phi(a) + i b phi(a) + 0.5 a b^2 phi(a) so that the
-    imaginary component retains O(h) accuracy and the real component is
-    accurate enough for second-derivative estimators.
+    expansion Φ(a + i b) ≈ Φ(a) + i b φ(a) + 0.5 a b^2 φ(a) so that:
+      - Im[Φ] captures the first derivative at O(h) without real cancellation.
+      - Re[Φ] is accurate enough for second-derivative estimators (Γ via CS).
     """
 
     arr = np.asarray(z)
@@ -275,7 +317,11 @@ Phi_dispatch = Phi_t
 
 
 def _promote_and_broadcast(*args):
-    """Convert inputs to a common dtype and broadcast to a shared shape."""
+    """Convert inputs to a common dtype and broadcast to a shared shape.
+
+    Ensures downstream vectorized code can assume consistent dtype/shape for
+    real or complex scalars/arrays.
+    """
 
     raw = [np.asarray(arg) for arg in args]
     dtype = np.result_type(*raw, np.float64)
@@ -286,8 +332,13 @@ def _promote_and_broadcast(*args):
 
 
 def _log_F_over_K_t(F, K, eps=1e-12):
-    """Type-dispatched log(F/K) that falls back to the complex variant."""
+    """Type-dispatched log(F/K) that falls back to the complex variant.
 
+    For complex inputs, we must operate in complex space; we still use the
+    log1p trick when |(F-K)/K| is small to reduce cancellation.
+    """
+
+    # When inputs are complex we cannot rely on real-only shortcuts; use complex arrays.
     if np.iscomplexobj(F) or np.iscomplexobj(K):
         F = np.asarray(F, dtype=np.complex128)
         K = np.asarray(K, dtype=np.complex128)
@@ -322,13 +373,15 @@ def bs_price_call_t(S, K, r, q, sigma, T, eps=1e-12):
     """
     Black-Scholes call price that supports real or complex scalars/arrays.
 
-    Real inputs reproduce the analytic pricing function, while complex inputs
-    (complex-step perturbations) evaluate the formula analytically.
+    Real inputs reproduce the analytic pricing function. Complex inputs are
+    used for complex-step perturbations to estimate derivatives analytically
+    without finite differencing.
     """
 
     dtype, (S, K, r, q, sigma, T), scalar = _promote_and_broadcast(S, K, r, q, sigma, T)
     is_complex = np.issubdtype(dtype, np.complexfloating)
 
+    # discount factor and forward price appear in both real+complex math
     DF = np.exp(-r * T)
     F = S * np.exp((r - q) * T)
 
@@ -365,24 +418,38 @@ def bs_price_call_t(S, K, r, q, sigma, T, eps=1e-12):
 
 
 def delta_cs(S, K, r, q, sigma, T, h=1e-20):
-    """Black-Scholes delta obtained via complex-step differentiation."""
+    """Black-Scholes delta obtained via complex-step differentiation.
+
+    Perturb S → S + i h. Then ∂C/∂S ≈ Im[C(S+ih)]/h with machine-precision
+    accuracy in the imaginary component and no subtraction in the real axis.
+    """
 
     S_c = np.asarray(S, dtype=np.complex128) + 1j * h
     price_c = bs_price_call_t(S_c, K, r, q, sigma, T)
+    # Only the imaginary part carries derivative information for complex-step.
     return np.imag(price_c) / h
 
 
 def gamma_cs_real(S, K, r, q, sigma, T, h=1e-5):
-    """Gamma estimate from the real part of the complex-step perturbation."""
+    """Gamma estimate from the real part of the complex-step perturbation.
+
+    Using Re[C(S+ih)] removes the Im[·] term but preserves curvature effects;
+    a simple second-order relation yields Γ from the real-part difference.
+    """
 
     S_c_ih = np.asarray(S, dtype=np.complex128) + 1j * h
     R_C_S_ih = np.real(bs_price_call_t(S_c_ih, K, r, q, sigma, T))
     C_s = bs_price_call_t(S, K, r, q, sigma, T)
+    # Using the real part removes the imaginary component while preserving curvature.
     return -2.0 / (h * h) * (R_C_S_ih - C_s)
 
 
 def gamma_45_deg(S, K, r, q, sigma, T, h=1e-5):
-    """Gamma estimate using the 45-degree complex-step direction."""
+    """Gamma estimate using the 45-degree complex-step direction.
+
+    Displacing S by ±(1+i)h/√2 symmetrizes the perturbation in real/imag axes,
+    cancelling lower-order terms; this improves truncation (≈O(h^4)).
+    """
 
     omega = np.complex128((1.0 + 1.0j) / np.sqrt(2.0))
     S0 = np.asarray(S, dtype=np.complex128)
@@ -390,8 +457,11 @@ def gamma_45_deg(S, K, r, q, sigma, T, h=1e-5):
     S_bwd = S0 - omega * h
     C_fwd = bs_price_call_t(S_fwd, K, r, q, sigma, T)
     C_bwd = bs_price_call_t(S_bwd, K, r, q, sigma, T)
+    # Symmetric displacement along (1+i)/√2 isolates the second derivative more cleanly.
     return np.imag(C_fwd + C_bwd) / (h * h)
 
+Gamma_cs_real = gamma_cs_real
+Gamma_45_deg = gamma_45_deg
 
 __all__ = [
     "INV_SQRT_2",

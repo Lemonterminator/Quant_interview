@@ -1,4 +1,6 @@
+############################################################
 # Python
+############################################################
 __pycache__/
 *.py[cod]
 *.pyo
@@ -8,21 +10,60 @@ env/
 venv/
 .venv/
 
-# IDE/editor
+############################################################
+# IDE/editor and OS
+############################################################
 .vscode/
 .idea/
 *.code-workspace
-
-# OS
 .DS_Store
 Thumbs.db
 
-# Build artifacts
+############################################################
+# Documents
+############################################################
+*.pdf
+
+############################################################
+# Python packaging
+############################################################
 build/
 dist/
 *.egg-info/
 
-# Local CMake/VS build folders
+############################################################
+# CMake / Visual Studio (C++)
+############################################################
+BS_cpp/build/
+BS_cpp/**/CMakeFiles/
+BS_cpp/**/CMakeCache.txt
+BS_cpp/**/cmake_install.cmake
+BS_cpp/**/*.vcxproj*
+BS_cpp/**/*.sln
+
+# Compiled objects and binaries
+**/*.obj
+**/*.pdb
+**/*.ilk
+**/*.lib
+**/*.exp
+**/*.dll
+**/*.exe
+
+############################################################
+# Results (keep CSV, optionally ignore PNGs)
+############################################################
+# Keep assignment CSVs
+!Python_prototype/results/**/bs_fd_vs_complex.csv
+!results_cpp/**/bs_fd_vs_complex.csv
+
+# Ignore generated plots (uncomment to ignore)
+# Python_prototype/results/**/*.png
+# results_cpp/**/*.png
+
+############################################################
+# Misc local output
+############################################################
 build_vs/
 out/
 

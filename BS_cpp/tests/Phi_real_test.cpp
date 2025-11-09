@@ -4,7 +4,9 @@
 #include <cmath>
 #include <limits>
 
-#include "bs_call_price.h"
+#include "black_scholes.h"
+
+using black_scholes::Phi_real;
 
 namespace {
     bool approx_equal(double a, double b, double tol = 1e-12) {
