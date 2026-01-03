@@ -1,0 +1,16 @@
+asset_id,yfticker,asset_name,asset_class,region,ccy
+US_EQ_SPY,SPY,SPDR S&P 500,Equity,US,USD
+US_EQ_QQQ,QQQ,Invesco QQQ (Nasdaq 100),Equity,US,USD
+US_EQ_IWM,IWM,iShares Russell 2000,Equity,US,USD
+US_EQ_VTV,VTV,Vanguard Value,Equity,US,USD
+EU_EQ_IEV,IEV,iShares MSCI Europe,Equity,Europe,USD
+JP_EQ_EWJ,EWJ,iShares MSCI Japan,Equity,Japan,USD
+EM_EQ_EEM,EEM,iShares MSCI Emerging Markets,Equity,EM,USD
+US_BD_IEF,IEF,iShares 7-10Y Treasuries,Bond,US,USD
+US_BD_TLT,TLT,iShares 20+Y Treasuries,Bond,US,USD
+US_BD_TIP,TIP,iShares TIPS,Bond,US,USD
+CMD_GLD,GLD,SPDR Gold Shares,Commodity,Global,USD
+CMD_USO,USO,United States Oil Fund,Commodity,Global,USD
+CMD_DBC,DBC,Invesco DB Commodity Index,Commodity,Global,USD
+FX_EURUSD,EURUSD=X,EUR/USD,FX,G10,USD
+FX_JPYUSD,JPYUSD=X,JPY/USD,FX,G10,USD
