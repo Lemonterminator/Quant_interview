@@ -1,0 +1,23 @@
+test_degenerate_midpoint_convention (test_bs_batch.BatchContractTests.test_degenerate_midpoint_convention) ... ok
+test_empty_and_input_immutability (test_bs_batch.BatchContractTests.test_empty_and_input_immutability) ... ok
+test_golden_cases (test_bs_batch.BatchContractTests.test_golden_cases) ... ok
+test_invalid_inputs (test_bs_batch.BatchContractTests.test_invalid_inputs) ... ok
+test_metamorphic_properties (test_bs_batch.BatchContractTests.test_metamorphic_properties) ... ok
+test_scalar_and_broadcast_shapes (test_bs_batch.BatchContractTests.test_scalar_and_broadcast_shapes) ... ok
+test_batch_scalar_broadcast_steps_and_degenerate (test_complex_cdf_order.ComplexCdfOrderTests.test_batch_scalar_broadcast_steps_and_degenerate) ... ok
+test_default_p3_and_legacy_exports (test_complex_cdf_order.ComplexCdfOrderTests.test_default_p3_and_legacy_exports) ... ok
+test_golden_coefficients_all_orders (test_complex_cdf_order.ComplexCdfOrderTests.test_golden_coefficients_all_orders) ... ok
+test_greeks_forward_order_through_price_to_cdf (test_complex_cdf_order.ComplexCdfOrderTests.test_greeks_forward_order_through_price_to_cdf) ... ok
+test_invalid_order_at_every_layer (test_complex_cdf_order.ComplexCdfOrderTests.test_invalid_order_at_every_layer) ... ok
+test_local_second_vs_fourth_order (test_complex_cdf_order.ComplexCdfOrderTests.test_local_second_vs_fourth_order) ... ok
+test_real_inputs_empty_arrays_and_np_integer (test_complex_cdf_order.ComplexCdfOrderTests.test_real_inputs_empty_arrays_and_np_integer) ... ok
+test_sweep_forwarding_and_positional_compatibility (test_complex_cdf_order.ComplexCdfOrderTests.test_sweep_forwarding_and_positional_compatibility) ... ok
+test_delta_methods_at_resolvable_step (test_numerical_accuracy.NumericalAccuracyTests.test_delta_methods_at_resolvable_step) ... ok
+test_forward_gamma_at_resolvable_step (test_numerical_accuracy.NumericalAccuracyTests.test_forward_gamma_at_resolvable_step) ... ok
+test_tiny_fd_step_is_unresolvable (test_numerical_accuracy.NumericalAccuracyTests.test_tiny_fd_step_is_unresolvable) ... ok
+test_truncated_complex_cdf_changes_45_degree_order (test_numerical_accuracy.NumericalAccuracyTests.test_truncated_complex_cdf_changes_45_degree_order) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.252s
+
+OK

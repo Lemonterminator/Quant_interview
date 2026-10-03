@@ -1,0 +1,207 @@
+{
+  "generated_at": "2026-10-03T14:06:15.432754+00:00",
+  "commit": "54328eaf7d47c237b132376c42dcc07a87c52f0d",
+  "dirty": true,
+  "python": "3.14.4 (tags/v3.14.4:23116f9, Apr  7 2026, 14:10:54) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cdf_order": 3,
+  "tests": [
+    {
+      "id": "test_bs_batch.BatchContractTests.test_degenerate_midpoint_convention",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_bs_batch.BatchContractTests.test_empty_and_input_immutability",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_bs_batch.BatchContractTests.test_golden_cases",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_bs_batch.BatchContractTests.test_invalid_inputs",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_bs_batch.BatchContractTests.test_metamorphic_properties",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_bs_batch.BatchContractTests.test_scalar_and_broadcast_shapes",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_complex_cdf_order.ComplexCdfOrderTests.test_batch_scalar_broadcast_steps_and_degenerate",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_complex_cdf_order.ComplexCdfOrderTests.test_default_p3_and_legacy_exports",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_complex_cdf_order.ComplexCdfOrderTests.test_golden_coefficients_all_orders",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_complex_cdf_order.ComplexCdfOrderTests.test_greeks_forward_order_through_price_to_cdf",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_complex_cdf_order.ComplexCdfOrderTests.test_invalid_order_at_every_layer",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_complex_cdf_order.ComplexCdfOrderTests.test_local_second_vs_fourth_order",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_complex_cdf_order.ComplexCdfOrderTests.test_real_inputs_empty_arrays_and_np_integer",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_complex_cdf_order.ComplexCdfOrderTests.test_sweep_forwarding_and_positional_compatibility",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_numerical_accuracy.NumericalAccuracyTests.test_delta_methods_at_resolvable_step",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_numerical_accuracy.NumericalAccuracyTests.test_forward_gamma_at_resolvable_step",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_numerical_accuracy.NumericalAccuracyTests.test_tiny_fd_step_is_unresolvable",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "test_numerical_accuracy.NumericalAccuracyTests.test_truncated_complex_cdf_changes_45_degree_order",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "cpp:complex_cdf_order",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "cpp:bs_batch_contract",
+      "status": "BLOCKED",
+      "reason": "BAD_COMMAND\n\n\nDirect launch diagnostic: [WinError 4551] An Application Control policy has blocked this file"
+    },
+    {
+      "id": "cpp:gamma_edge",
+      "status": "PASS",
+      "reason": ""
+    },
+    {
+      "id": "cpp:normal_cdf",
+      "status": "BLOCKED",
+      "reason": "BAD_COMMAND\n\n\nDirect launch diagnostic: [WinError 4551] An Application Control policy has blocked this file"
+    }
+  ],
+  "curve_metrics": [
+    {
+      "scenario": "atm",
+      "method": "delta_forward",
+      "max_abs": 0.1707148984830712,
+      "median_abs": 2.3920846792424566e-05,
+      "min_abs": 1.644206992779118e-11,
+      "nonfinite": 0
+    },
+    {
+      "scenario": "atm",
+      "method": "delta_cs",
+      "max_abs": 4.9617002638391305e-05,
+      "median_abs": 2.220446049250313e-16,
+      "min_abs": 0.0,
+      "nonfinite": 0
+    },
+    {
+      "scenario": "atm",
+      "method": "gamma_forward",
+      "max_abs": 71054273576010.03,
+      "median_abs": 0.01984762737385059,
+      "min_abs": 5.024300345213284e-08,
+      "nonfinite": 0
+    },
+    {
+      "scenario": "atm",
+      "method": "gamma_cs_real",
+      "max_abs": 0.5151819302500481,
+      "median_abs": 0.01984762737385059,
+      "min_abs": 9.683517182557111e-11,
+      "nonfinite": 0
+    },
+    {
+      "scenario": "atm",
+      "method": "gamma_45_deg",
+      "max_abs": 0.01984762737385059,
+      "median_abs": 1.4537451433621618e-09,
+      "min_abs": 6.557254739192331e-16,
+      "nonfinite": 0
+    },
+    {
+      "scenario": "near_expiry",
+      "method": "delta_forward",
+      "max_abs": 0.9209810635547448,
+      "median_abs": 0.0003311874667402126,
+      "min_abs": 3.5328545644475184e-09,
+      "nonfinite": 0
+    },
+    {
+      "scenario": "near_expiry",
+      "method": "delta_cs",
+      "max_abs": 0.04019305676406404,
+      "median_abs": 7.532863222081687e-14,
+      "min_abs": 1.2212453270876722e-15,
+      "nonfinite": 0
+    },
+    {
+      "scenario": "near_expiry",
+      "method": "gamma_forward",
+      "max_abs": 142108547152027.66,
+      "median_abs": 7.209600147008959,
+      "min_abs": 6.553914348117473e-06,
+      "nonfinite": 0
+    },
+    {
+      "scenario": "near_expiry",
+      "method": "gamma_cs_real",
+      "max_abs": 914.5473009428326,
+      "median_abs": 7.621781304240391,
+      "min_abs": 3.876149738957224e-07,
+      "nonfinite": 0
+    },
+    {
+      "scenario": "near_expiry",
+      "method": "gamma_45_deg",
+      "max_abs": 7.621781304240391,
+      "median_abs": 7.380401101242384e-05,
+      "min_abs": 4.1233683134578314e-11,
+      "nonfinite": 0
+    }
+  ],
+  "golden_max_abs": {
+    "price": 1.7763568394002505e-14,
+    "delta": 1.1102230246251565e-16,
+    "gamma": 8.881784197001252e-16
+  }
+}

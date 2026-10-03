@@ -1,0 +1,41 @@
+$ cmake -S C:\Users\Jiang\Documents\Long Way to Quant\Quant_interview\BS_cpp -B C:\Users\Jiang\Documents\Long Way to Quant\Quant_interview\out\test-report -G Ninja
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/Users/Jiang/Documents/Long Way to Quant/Quant_interview/out/test-report
+
+$ cmake --build C:\Users\Jiang\Documents\Long Way to Quant\Quant_interview\out\test-report --config Release --parallel 4
+[1/7] Building CXX object CMakeFiles/black_scholes_core.dir/complex_step.cpp.obj
+[2/7] Linking CXX static library libblack_scholes_core.a
+[3/7] Linking CXX executable Phi_real_test.exe
+[4/7] Linking CXX executable gamma_edge_test.exe
+[5/7] Linking CXX executable complex_cdf_order_test.exe
+[6/7] Linking CXX executable bs_greeks_test.exe
+[7/7] Linking CXX executable bs_batch_contract_test.exe
+
+Test project C:/Users/Jiang/Documents/Long Way to Quant/Quant_interview/out/test-report
+    Start 1: complex_cdf_order
+1/4 Test #1: complex_cdf_order ................   Passed    0.39 sec
+    Start 2: bs_batch_contract
+2/4 Test #2: bs_batch_contract ................***Not Run   0.00 sec
+    Start 3: gamma_edge
+3/4 Test #3: gamma_edge .......................   Passed   10.05 sec
+    Start 4: normal_cdf
+4/4 Test #4: normal_cdf .......................***Not Run   0.00 sec
+
+50% tests passed, 2 tests failed out of 4
+
+Total Test time (real) =  11.14 sec
+
+The following tests FAILED:
+	  2 - bs_batch_contract (BAD_COMMAND)
+	  4 - normal_cdf (BAD_COMMAND)
+Process not started
+ C:/Users/Jiang/Documents/Long Way to Quant/Quant_interview/out/test-report/bs_batch_contract_test.exe
+[unknown error]
+Process not started
+ C:/Users/Jiang/Documents/Long Way to Quant/Quant_interview/out/test-report/Phi_real_test.exe
+[unknown error]
+Errors while running CTest
+
+[WinError 4551] An Application Control policy has blocked this file
+[WinError 4551] An Application Control policy has blocked this file

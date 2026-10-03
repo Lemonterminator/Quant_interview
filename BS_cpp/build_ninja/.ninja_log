@@ -1,7 +1,0 @@
-# ninja log v6
-17	299	7875215313749676	CMakeFiles/black_scholes_core.dir/black_scholes.cpp.obj	c71ace8ef13aef94
-20	331	7875215313779677	CMakeFiles/Phi_real_test.dir/tests/Phi_real_test.cpp.obj	72a11144ca714f58
-300	355	7875215316574681	black_scholes_core.lib	e38e849de96c31b9
-355	558	7875215317124698	Phi_real_test.exe	f579f5d5cf6baca4
-23	605	7875215313804690	CMakeFiles/bs_greeks_test.dir/tests/black_scholes_test.cpp.obj	9eeeae04bbb4e840
-605	821	7875215319624813	bs_greeks_test.exe	a17ba9ab25e1648a

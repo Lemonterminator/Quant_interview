@@ -35,6 +35,7 @@ dist/
 # CMake / Visual Studio (C++)
 ############################################################
 BS_cpp/build/
+BS_cpp/build_ninja/
 BS_cpp/**/CMakeFiles/
 BS_cpp/**/CMakeCache.txt
 BS_cpp/**/cmake_install.cmake
@@ -51,19 +52,14 @@ BS_cpp/**/*.sln
 **/*.exe
 
 ############################################################
-# Results (keep CSV, optionally ignore PNGs)
+# Assignment artifacts are intentionally versioned
 ############################################################
-# Keep assignment CSVs
-!Python_prototype/results/**/bs_fd_vs_complex.csv
-!results_cpp/**/bs_fd_vs_complex.csv
-
-# Ignore generated plots (uncomment to ignore)
-# Python_prototype/results/**/*.png
-# results_cpp/**/*.png
+# Historical CSVs and plots live under artifacts/assignment/.
 
 ############################################################
 # Misc local output
 ############################################################
 build_vs/
 out/
+graphify-out/
 

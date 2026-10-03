@@ -291,16 +291,24 @@ Gamma_forward = gamma_forward
 # ---------------------------------------------------------------------------
 
 
-def Phi_t(z):
-    """
-    Type-dispatched standard normal CDF that preserves complex-step accuracy.
+def _validate_cdf_order(order):
+    if isinstance(order, (bool, np.bool_)) or not isinstance(order, (int, np.integer)):
+        raise TypeError("order must be an integer in {2, 3, 4, 5, 6}")
+    if order not in (2, 3, 4, 5, 6):
+        raise ValueError("order must be one of 2, 3, 4, 5, 6")
 
-    Real inputs defer to Phi_real. For complex inputs we use the complex-step
-    expansion Φ(a + i b) ≈ Φ(a) + i b φ(a) + 0.5 a b^2 φ(a) so that:
-      - Im[Φ] captures the first derivative at O(h) without real cancellation.
-      - Re[Φ] is accurate enough for second-derivative estimators (Γ via CS).
+
+def Phi_t(z, *, order=3):
+    """
+    Normal CDF with a selectable local Taylor expansion in the imaginary part.
+
+    ``order`` is the highest retained power of Im(z), not the Greek's error
+    order. P3 is the default; order=2 reproduces the former implementation.
+    Real inputs use Phi_real for every valid order. Complex inputs require a
+    small imaginary part for useful accuracy; this is not a global complex CDF.
     """
 
+    _validate_cdf_order(order)
     arr = np.asarray(z)
     if not np.iscomplexobj(arr):
         return Phi_real(arr)
@@ -308,8 +316,22 @@ def Phi_t(z):
     zr = np.real(arr)
     zi = np.imag(arr)
     pdf = phi(zr)
-    real_part = Phi_real(zr) + 0.5 * zr * (zi * zi) * pdf
+    b2 = zi * zi
+    real_part = Phi_real(zr) + 0.5 * zr * b2 * pdf
     imag_part = pdf * zi
+    if order >= 3:
+        a2 = zr * zr
+        b3 = zi * b2
+        imag_part += ((1 - a2) / 6) * b3 * pdf
+    if order >= 4:
+        b4 = b2 * b2
+        real_part += ((3 - a2) * zr / 24) * b4 * pdf
+    if order >= 5:
+        b5 = b3 * b2
+        imag_part += (((a2 - 6) * a2 + 3) / 120) * b5 * pdf
+    if order >= 6:
+        b6 = b4 * b2
+        real_part += (((a2 - 10) * a2 + 15) * zr / 720) * b6 * pdf
     return real_part + 1j * imag_part
 
 
@@ -369,7 +391,7 @@ def _log_F_over_K_t(F, K, eps=1e-12):
     return _log_F_over_K(F, K, eps=eps)
 
 
-def bs_price_call_t(S, K, r, q, sigma, T, eps=1e-12):
+def bs_price_call_t(S, K, r, q, sigma, T, eps=1e-12, *, order=3):
     """
     Black-Scholes call price that supports real or complex scalars/arrays.
 
@@ -378,6 +400,7 @@ def bs_price_call_t(S, K, r, q, sigma, T, eps=1e-12):
     without finite differencing.
     """
 
+    _validate_cdf_order(order)
     dtype, (S, K, r, q, sigma, T), scalar = _promote_and_broadcast(S, K, r, q, sigma, T)
     is_complex = np.issubdtype(dtype, np.complexfloating)
 
@@ -409,7 +432,7 @@ def bs_price_call_t(S, K, r, q, sigma, T, eps=1e-12):
         num = ln + 0.5 * sigma[mask] * sigma[mask] * T[mask]
         d1 = num / sigTm
         d2 = d1 - sigTm
-        price = DF[mask] * (Fm * Phi_t(d1) - Km * Phi_t(d2))
+        price = DF[mask] * (Fm * Phi_t(d1, order=order) - Km * Phi_t(d2, order=order))
         out[mask] = price
 
     if scalar:
@@ -417,7 +440,7 @@ def bs_price_call_t(S, K, r, q, sigma, T, eps=1e-12):
     return out
 
 
-def delta_cs(S, K, r, q, sigma, T, h=1e-20):
+def delta_cs(S, K, r, q, sigma, T, h=1e-20, *, order=3):
     """Black-Scholes delta obtained via complex-step differentiation.
 
     Perturb S → S + i h. Then ∂C/∂S ≈ Im[C(S+ih)]/h with machine-precision
@@ -425,12 +448,12 @@ def delta_cs(S, K, r, q, sigma, T, h=1e-20):
     """
 
     S_c = np.asarray(S, dtype=np.complex128) + 1j * h
-    price_c = bs_price_call_t(S_c, K, r, q, sigma, T)
+    price_c = bs_price_call_t(S_c, K, r, q, sigma, T, order=order)
     # Only the imaginary part carries derivative information for complex-step.
     return np.imag(price_c) / h
 
 
-def gamma_cs_real(S, K, r, q, sigma, T, h=1e-5):
+def gamma_cs_real(S, K, r, q, sigma, T, h=1e-5, *, order=3):
     """Gamma estimate from the real part of the complex-step perturbation.
 
     Using Re[C(S+ih)] removes the Im[·] term but preserves curvature effects;
@@ -438,25 +461,27 @@ def gamma_cs_real(S, K, r, q, sigma, T, h=1e-5):
     """
 
     S_c_ih = np.asarray(S, dtype=np.complex128) + 1j * h
-    R_C_S_ih = np.real(bs_price_call_t(S_c_ih, K, r, q, sigma, T))
-    C_s = bs_price_call_t(S, K, r, q, sigma, T)
+    R_C_S_ih = np.real(bs_price_call_t(S_c_ih, K, r, q, sigma, T, order=order))
+    C_s = bs_price_call_t(S, K, r, q, sigma, T, order=order)
     # Using the real part removes the imaginary component while preserving curvature.
     return -2.0 / (h * h) * (R_C_S_ih - C_s)
 
 
-def gamma_45_deg(S, K, r, q, sigma, T, h=1e-5):
+def gamma_45_deg(S, K, r, q, sigma, T, h=1e-5, *, order=3):
     """Gamma estimate using the 45-degree complex-step direction.
 
     Displacing S by ±(1+i)h/√2 symmetrizes the perturbation in real/imag axes,
-    cancelling lower-order terms; this improves truncation (≈O(h^4)).
+    cancelling lower-order terms. The local truncation is O(h^2) for order=2
+    and generically O(h^4) for orders 3..6, before floating-point errors dominate.
+    More CDF terms do not increase this stencil's derivative order beyond four.
     """
 
     omega = np.complex128((1.0 + 1.0j) / np.sqrt(2.0))
     S0 = np.asarray(S, dtype=np.complex128)
     S_fwd = S0 + omega * h
     S_bwd = S0 - omega * h
-    C_fwd = bs_price_call_t(S_fwd, K, r, q, sigma, T)
-    C_bwd = bs_price_call_t(S_bwd, K, r, q, sigma, T)
+    C_fwd = bs_price_call_t(S_fwd, K, r, q, sigma, T, order=order)
+    C_bwd = bs_price_call_t(S_bwd, K, r, q, sigma, T, order=order)
     # Symmetric displacement along (1+i)/√2 isolates the second derivative more cleanly.
     return np.imag(C_fwd + C_bwd) / (h * h)
 

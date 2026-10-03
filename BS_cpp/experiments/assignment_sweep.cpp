@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "black_scholes.h"
+#include "complex_step.h"
 
 namespace {
 
@@ -25,14 +26,15 @@ using black_scholes::bs_price_call;
 using black_scholes::delta_call;
 using black_scholes::delta_forward;
 using black_scholes::gamma_forward;
+using black_scholes::delta_complex_step;
+using black_scholes::gamma_cs_real;
+using black_scholes::gamma_45_deg;
 
 constexpr double HREL_MIN = 1e-16;
 constexpr double HREL_MAX = 1e-4;
 constexpr std::size_t HREL_POINTS = 24;
-const std::filesystem::path RESULTS_ROOT{"results_cpp"};
+const std::filesystem::path RESULTS_ROOT{"artifacts/assignment/cpp"};
 constexpr double FLOAT_EPS = std::numeric_limits<double>::epsilon();
-constexpr double INV_SQRT_2PI = 0.39894228040143267794;
-const std::complex<double> OMEGA_45((1.0 / std::sqrt(2.0)), (1.0 / std::sqrt(2.0)));
 
 struct Scenario {
     std::string name;
@@ -119,93 +121,6 @@ std::string slugify(std::string text) {
     return text;
 }
 
-double phi_pdf(double z) {
-    return INV_SQRT_2PI * std::exp(-0.5 * z * z);
-}
-
-std::complex<double> Phi_t(const std::complex<double>& z) {
-    if (std::abs(z.imag()) < 1e-30) {
-        return {black_scholes::Phi_real(z.real()), 0.0};
-    }
-    const double a = z.real();
-    const double b = z.imag();
-    const double pdf = phi_pdf(a);
-    const double real_part = black_scholes::Phi_real(a) + 0.5 * a * (b * b) * pdf;
-    const double imag_part = pdf * b;
-    return {real_part, imag_part};
-}
-
-std::complex<double> log_F_over_K_t(const std::complex<double>& F, const std::complex<double>& K) {
-    return std::log(F / K);
-}
-
-std::complex<double> bs_price_call_complex(const std::complex<double>& S,
-                                           double K,
-                                           double r,
-                                           double q,
-                                           double sigma,
-                                           double T) {
-    const double sigma_sqrt_T_real = sigma * std::sqrt(std::max(T, 0.0));
-    if (sigma_sqrt_T_real == 0.0) {
-        throw std::runtime_error("Complex-step pricing requires sigma*sqrt(T) > 0");
-    }
-
-    const double DF = std::exp(-r * T);
-    const double exp_rqT = std::exp((r - q) * T);
-    const std::complex<double> F = S * exp_rqT;
-    const std::complex<double> sqrt_T = std::sqrt(std::complex<double>(T, 0.0));
-    const std::complex<double> sigma_sqrt_T = sigma * sqrt_T;
-
-    const std::complex<double> ln = log_F_over_K_t(F, std::complex<double>(K, 0.0));
-    const std::complex<double> num = ln + 0.5 * sigma * sigma * T;
-    const std::complex<double> d1 = num / sigma_sqrt_T;
-    const std::complex<double> d2 = d1 - sigma_sqrt_T;
-
-    const std::complex<double> term1 = F * Phi_t(d1);
-    const std::complex<double> term2 = static_cast<double>(K) * Phi_t(d2);
-    return DF * (term1 - term2);
-}
-
-double delta_complex_step(double S,
-                          double K,
-                          double r,
-                          double q,
-                          double sigma,
-                          double T,
-                          double h) {
-    const std::complex<double> S_c(S, h);
-    const std::complex<double> price = bs_price_call_complex(S_c, K, r, q, sigma, T);
-    return price.imag() / h;
-}
-
-double gamma_cs_real(double S,
-                     double K,
-                     double r,
-                     double q,
-                     double sigma,
-                     double T,
-                     double h) {
-    const std::complex<double> S_c(S, h);
-    const std::complex<double> price = bs_price_call_complex(S_c, K, r, q, sigma, T);
-    const double price_real = bs_price_call(S, K, r, q, sigma, T);
-    return -2.0 * (price.real() - price_real) / (h * h);
-}
-
-double gamma_45_deg(double S,
-                     double K,
-                     double r,
-                     double q,
-                     double sigma,
-                     double T,
-                     double h) {
-    const std::complex<double> S0(S, 0.0);
-    const std::complex<double> S_fwd = S0 + OMEGA_45 * h;
-    const std::complex<double> S_bwd = S0 - OMEGA_45 * h;
-    const std::complex<double> Cf = bs_price_call_complex(S_fwd, K, r, q, sigma, T);
-    const std::complex<double> Cb = bs_price_call_complex(S_bwd, K, r, q, sigma, T);
-    return std::imag(Cf + Cb) / (h * h);
-}
-
 double relative_error(double value, double reference) {
     const double denom = std::max(std::abs(reference), FLOAT_EPS);
     return std::abs(value - reference) / denom;
@@ -236,7 +151,7 @@ Summary summarize(const std::vector<double>& values) {
     return stats;
 }
 
-DeltaSweep run_delta_sweep(const Scenario& scenario, const std::vector<double>& hrel_grid) {
+DeltaSweep run_delta_sweep(const Scenario& scenario, const std::vector<double>& hrel_grid, int order = 3) {
     DeltaSweep sweep;
     sweep.hrel = hrel_grid;
     sweep.h.resize(hrel_grid.size());
@@ -252,7 +167,7 @@ DeltaSweep run_delta_sweep(const Scenario& scenario, const std::vector<double>& 
         const double h_abs = hrel_grid[i] * scenario.S;
         sweep.h[i] = h_abs;
         sweep.delta_fd[i] = delta_forward(scenario.S, scenario.K, scenario.r, scenario.q, scenario.sigma, scenario.T, h_abs);
-        sweep.delta_cs[i] = delta_complex_step(scenario.S, scenario.K, scenario.r, scenario.q, scenario.sigma, scenario.T, h_abs);
+        sweep.delta_cs[i] = delta_complex_step(scenario.S, scenario.K, scenario.r, scenario.q, scenario.sigma, scenario.T, h_abs, order);
         sweep.delta_fd_abs_err[i] = std::abs(sweep.delta_fd[i] - sweep.delta_ref[i]);
         sweep.delta_cs_abs_err[i] = std::abs(sweep.delta_cs[i] - sweep.delta_ref[i]);
         sweep.delta_fd_rel_err[i] = relative_error(sweep.delta_fd[i], sweep.delta_ref[i]);
@@ -261,7 +176,7 @@ DeltaSweep run_delta_sweep(const Scenario& scenario, const std::vector<double>& 
     return sweep;
 }
 
-GammaSweep run_gamma_sweep(const Scenario& scenario, const std::vector<double>& hrel_grid) {
+GammaSweep run_gamma_sweep(const Scenario& scenario, const std::vector<double>& hrel_grid, int order = 3) {
     GammaSweep sweep;
     sweep.hrel = hrel_grid;
     sweep.h.resize(hrel_grid.size());
@@ -280,8 +195,8 @@ GammaSweep run_gamma_sweep(const Scenario& scenario, const std::vector<double>& 
         const double h_abs = hrel_grid[i] * scenario.S;
         sweep.h[i] = h_abs;
         sweep.gamma_fd[i] = gamma_forward(scenario.S, scenario.K, scenario.r, scenario.q, scenario.sigma, scenario.T, h_abs);
-        sweep.gamma_cs_real[i] = gamma_cs_real(scenario.S, scenario.K, scenario.r, scenario.q, scenario.sigma, scenario.T, h_abs);
-        sweep.gamma_45_deg[i] = gamma_45_deg(scenario.S, scenario.K, scenario.r, scenario.q, scenario.sigma, scenario.T, h_abs);
+        sweep.gamma_cs_real[i] = gamma_cs_real(scenario.S, scenario.K, scenario.r, scenario.q, scenario.sigma, scenario.T, h_abs, order);
+        sweep.gamma_45_deg[i] = gamma_45_deg(scenario.S, scenario.K, scenario.r, scenario.q, scenario.sigma, scenario.T, h_abs, order);
 
         sweep.gamma_fd_abs_err[i] = std::abs(sweep.gamma_fd[i] - sweep.gamma_ref[i]);
         sweep.gamma_cs_abs_err[i] = std::abs(sweep.gamma_cs_real[i] - sweep.gamma_ref[i]);
@@ -563,23 +478,23 @@ void print_router_diagnostics(const RoutingInfo& info) {
     report_segment("atm_tiny_sigma", info.atm_tiny_sigma);
 }
 
-std::vector<double> delta_cs_batch(const StressDataset& data, const std::vector<double>& h_abs) {
+std::vector<double> delta_cs_batch(const StressDataset& data, const std::vector<double>& h_abs, int order = 3) {
     std::vector<double> out(data.S.size());
     for (std::size_t i = 0; i < data.S.size(); ++i) {
-        out[i] = delta_complex_step(data.S[i], data.K[i], data.r[i], data.q[i], data.sigma[i], data.T[i], h_abs[i]);
+        out[i] = delta_complex_step(data.S[i], data.K[i], data.r[i], data.q[i], data.sigma[i], data.T[i], h_abs[i], order);
     }
     return out;
 }
 
-std::vector<double> gamma_45_batch(const StressDataset& data, const std::vector<double>& h_abs) {
+std::vector<double> gamma_45_batch(const StressDataset& data, const std::vector<double>& h_abs, int order = 3) {
     std::vector<double> out(data.S.size());
     for (std::size_t i = 0; i < data.S.size(); ++i) {
-        out[i] = gamma_45_deg(data.S[i], data.K[i], data.r[i], data.q[i], data.sigma[i], data.T[i], h_abs[i]);
+        out[i] = gamma_45_deg(data.S[i], data.K[i], data.r[i], data.q[i], data.sigma[i], data.T[i], h_abs[i], order);
     }
     return out;
 }
 
-void run_parallel_stress_test(std::size_t batch_size = 40000) {
+void run_parallel_stress_test(std::size_t batch_size = 40000, int order = 3) {
     const auto dataset = generate_stress_test_dataset(batch_size);
     const RoutingInfo routing = route_hrel(dataset.S, dataset.K, dataset.sigma, dataset.T);
 
@@ -590,8 +505,8 @@ void run_parallel_stress_test(std::size_t batch_size = 40000) {
     }
 
     const auto start = std::chrono::steady_clock::now();
-    const auto delta = delta_cs_batch(dataset, h_abs);
-    const auto gamma = gamma_45_batch(dataset, h_abs);
+    const auto delta = delta_cs_batch(dataset, h_abs, order);
+    const auto gamma = gamma_45_batch(dataset, h_abs, order);
     const double elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
 
     std::cout << "\n----------------------------------------------------\n";
@@ -616,7 +531,24 @@ void run_parallel_stress_test(std::size_t batch_size = 40000) {
 
 } // namespace
 
-int main() {
+int main(int argc, char** argv) {
+    int order = 3;
+    if (argc == 2 && std::string(argv[1]) == "--help") {
+        std::cout << "Usage: bs_greeks_test [--order 2|3|4|5|6]\n";
+        return 0;
+    }
+    if (argc != 1) {
+        try {
+            if (argc != 3 || std::string(argv[1]) != "--order") throw std::invalid_argument("arguments");
+            std::size_t consumed = 0;
+            order = std::stoi(argv[2], &consumed);
+            if (consumed != std::string(argv[2]).size() || order < 2 || order > 6) throw std::invalid_argument("order");
+        } catch (const std::exception&) {
+            std::cerr << "Usage: bs_greeks_test [--order 2|3|4|5|6]\n";
+            return 2;
+        }
+    }
+    std::cout << "CDF Taylor order: P" << order << '\n';
     const std::vector<Scenario> scenarios = {
         {"ATM reference S=100 K=100 r=0 q=0 sigma=20% T=1y", 100.0, 100.0, 0.0, 0.0, 0.20, 1.0},
         {"Near-expiry low-vol ATM S=100 K=100 r=0 q=0 sigma=1% T=1/365", 100.0, 100.0, 0.0, 0.0, 0.01, 1.0 / 365.0}
@@ -626,19 +558,19 @@ int main() {
 
     for (const auto& scenario : scenarios) {
         const std::string slug = slugify(scenario.name);
-        const std::filesystem::path scenario_dir = RESULTS_ROOT / slug;
+        const std::filesystem::path scenario_dir = RESULTS_ROOT / ("p" + std::to_string(order)) / slug;
         ensure_directory(scenario_dir);
 
         std::cout << "\nScenario: " << scenario.name << '\n';
 
-        const auto delta_sweep = run_delta_sweep(scenario, hrel_grid);
+        const auto delta_sweep = run_delta_sweep(scenario, hrel_grid, order);
         print_error_summary("\nDelta absolute error summary",
                             {
                                 {"delta forward", delta_sweep.delta_fd_abs_err},
                                 {"delta complex-step", delta_sweep.delta_cs_abs_err}
                             });
 
-        const auto gamma_sweep = run_gamma_sweep(scenario, hrel_grid);
+        const auto gamma_sweep = run_gamma_sweep(scenario, hrel_grid, order);
         print_error_summary("\nGamma absolute error summary",
                             {
                                 {"gamma forward", gamma_sweep.gamma_fd_abs_err},
@@ -651,6 +583,6 @@ int main() {
         std::cout << "\nSaved combined CSV to " << std::filesystem::absolute(combined_csv) << '\n';
     }
 
-    run_parallel_stress_test(40'000);
+    run_parallel_stress_test(40'000, order);
     return 0;
 }

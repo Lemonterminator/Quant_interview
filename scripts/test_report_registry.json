@@ -1,0 +1,132 @@
+{
+  "sources": [
+    "Python_prototype/black_scholes.py",
+    "Python_prototype/bs_batch.py",
+    "BS_cpp/black_scholes.cpp",
+    "BS_cpp/bs_batch.cpp",
+    "BS_cpp/complex_step.cpp"
+  ],
+  "evidence": {
+    "Python_prototype/bs_batch.py:evaluate_call": [
+      "test_bs_batch.BatchContractTests.*"
+    ],
+    "Python_prototype/black_scholes.py:bs_price_call": [
+      "test_bs_batch.BatchContractTests.test_golden_cases"
+    ],
+    "Python_prototype/black_scholes.py:delta_call": [
+      "test_bs_batch.BatchContractTests.test_golden_cases"
+    ],
+    "Python_prototype/black_scholes.py:Gamma": [
+      "test_bs_batch.BatchContractTests.test_golden_cases"
+    ],
+    "Python_prototype/black_scholes.py:delta_forward": [
+      "test_numerical_accuracy.NumericalAccuracyTests.test_delta_methods_at_resolvable_step"
+    ],
+    "Python_prototype/black_scholes.py:delta_cs": [
+      "test_numerical_accuracy.NumericalAccuracyTests.test_delta_methods_at_resolvable_step",
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_default_p3_and_legacy_exports",
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_invalid_order_at_every_layer",
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_greeks_forward_order_through_price_to_cdf"
+    ],
+    "Python_prototype/black_scholes.py:gamma_forward": [
+      "test_numerical_accuracy.NumericalAccuracyTests.test_forward_gamma_at_resolvable_step"
+    ],
+    "Python_prototype/black_scholes.py:Phi_t": [
+      "test_numerical_accuracy.NumericalAccuracyTests.test_truncated_complex_cdf_changes_45_degree_order",
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_default_p3_and_legacy_exports",
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_invalid_order_at_every_layer",
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_golden_coefficients_all_orders",
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_local_second_vs_fourth_order",
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_real_inputs_empty_arrays_and_np_integer"
+    ],
+    "BS_cpp/bs_batch.cpp:evaluate_call": [
+      "cpp:bs_batch_contract"
+    ],
+    "BS_cpp/black_scholes.cpp:bs_price_call": [
+      "cpp:bs_batch_contract"
+    ],
+    "BS_cpp/black_scholes.cpp:bs_price_call_par": [
+      "cpp:bs_batch_contract"
+    ],
+    "BS_cpp/black_scholes.cpp:delta_call": [
+      "cpp:bs_batch_contract"
+    ],
+    "BS_cpp/black_scholes.cpp:delta_call_par": [
+      "cpp:bs_batch_contract"
+    ],
+    "BS_cpp/black_scholes.cpp:Gamma": [
+      "cpp:bs_batch_contract",
+      "cpp:gamma_edge"
+    ],
+    "BS_cpp/black_scholes.cpp:Gamma_par": [
+      "cpp:bs_batch_contract"
+    ],
+    "BS_cpp/black_scholes.cpp:Phi_real": [
+      "cpp:normal_cdf"
+    ],
+    "Python_prototype/black_scholes.py:bs_price_call_t": [
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_default_p3_and_legacy_exports",
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_invalid_order_at_every_layer",
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_greeks_forward_order_through_price_to_cdf"
+    ],
+    "Python_prototype/black_scholes.py:gamma_cs_real": [
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_default_p3_and_legacy_exports",
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_invalid_order_at_every_layer",
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_greeks_forward_order_through_price_to_cdf"
+    ],
+    "Python_prototype/black_scholes.py:gamma_45_deg": [
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_default_p3_and_legacy_exports",
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_invalid_order_at_every_layer",
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_greeks_forward_order_through_price_to_cdf"
+    ],
+    "Python_prototype/bs_batch.py:evaluate_call_complex_step": [
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_batch_scalar_broadcast_steps_and_degenerate",
+      "test_complex_cdf_order.ComplexCdfOrderTests.test_invalid_order_at_every_layer"
+    ],
+    "BS_cpp/complex_step.cpp:Phi_t": [
+      "cpp:complex_cdf_order"
+    ],
+    "BS_cpp/complex_step.cpp:bs_price_call_complex": [
+      "cpp:complex_cdf_order"
+    ],
+    "BS_cpp/complex_step.cpp:delta_complex_step": [
+      "cpp:complex_cdf_order"
+    ],
+    "BS_cpp/complex_step.cpp:gamma_cs_real": [
+      "cpp:complex_cdf_order"
+    ],
+    "BS_cpp/complex_step.cpp:gamma_45_deg": [
+      "cpp:complex_cdf_order"
+    ],
+    "BS_cpp/bs_batch.cpp:evaluate_call_complex_step": [
+      "cpp:complex_cdf_order"
+    ]
+  },
+  "planned": [
+    {
+      "name": "Put 定价与 put-call parity",
+      "path": "Python_prototype/black_scholes.py",
+      "next": "增加 Put 与恒等式测试"
+    },
+    {
+      "name": "Vega / Theta / Rho",
+      "path": "Python_prototype/black_scholes.py",
+      "next": "增加解析公式、单位约定与差分检验"
+    },
+    {
+      "name": "IV 求解器",
+      "path": "Python_prototype/bs_batch.py",
+      "next": "增加无套利界、低 Vega、失败状态与价格往返测试"
+    },
+    {
+      "name": "显式 SIMD 后端",
+      "path": "BS_cpp/bs_batch.cpp",
+      "next": "实现后端；复用 golden 测试并取得向量化证据"
+    },
+    {
+      "name": "并行效率验收",
+      "path": "benchmarks/benchmark_python.py",
+      "next": "记录硬件、线程数、吞吐与 speedup；当前报告不运行基准"
+    }
+  ]
+}

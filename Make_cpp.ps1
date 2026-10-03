@@ -1,3 +1,4 @@
+param([ValidateRange(2, 6)][int]$Order = 3)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
@@ -5,7 +6,7 @@ $RepoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $RepoRoot
 
 $SourceDir = Join-Path $RepoRoot "BS_cpp"
-$BuildDir = Join-Path $SourceDir "build"
+$BuildDir = Join-Path $RepoRoot "out\bs_cpp"
 $Generator = "Ninja Multi-Config"
 
 function Import-VsDevEnvironment {
@@ -36,40 +37,22 @@ function Import-VsDevEnvironment {
     }
 }
 
-function Ensure-CMakeBuildDir {
-    param(
-        [Parameter(Mandatory = $true)][string]$BuildDir,
-        [Parameter(Mandatory = $true)][string]$ExpectedGenerator
-    )
-
-    $cache = Join-Path $BuildDir "CMakeCache.txt"
-    if (-not (Test-Path $cache)) {
-        return
-    }
-
-    $genLine = Get-Content $cache | Where-Object { $_ -like "CMAKE_GENERATOR:INTERNAL=*" } | Select-Object -First 1
-    if (-not $genLine) {
-        return
-    }
-
-    $currentGen = ($genLine -split "=", 2)[1].Trim()
-    if ($currentGen -ne $ExpectedGenerator) {
-        Write-Host "Build dir generator is '$currentGen' but expected '$ExpectedGenerator'; cleaning '$BuildDir'..."
-        Remove-Item -Recurse -Force $BuildDir
-    }
-}
-
 Import-VsDevEnvironment
-Ensure-CMakeBuildDir -BuildDir $BuildDir -ExpectedGenerator $Generator
 
 cmake -S $SourceDir -B $BuildDir -G $Generator
+if ($LASTEXITCODE -ne 0) { throw "CMake configuration failed." }
 cmake --build $BuildDir --config Release
+if ($LASTEXITCODE -ne 0) { throw "C++ build failed." }
+
+python (Join-Path $RepoRoot "scripts/update_test_report.py") --build-dir $BuildDir --config Release --order $Order
+if ($LASTEXITCODE -ne 0) { throw "Tests did not all pass. See docs/test_status.md for evidence and diagnostics." }
 
 $Exe = Join-Path $BuildDir "Release\\bs_greeks_test.exe"
 if (-not (Test-Path $Exe)) {
     throw "Build succeeded but '$Exe' not found."
 }
-& $Exe
+& $Exe --order $Order
+if ($LASTEXITCODE -ne 0) { throw "The C++ assignment sweep failed." }
 
 $VenvDir = Join-Path $RepoRoot ".venv"
 $VenvPython = Join-Path $VenvDir "Scripts\\python.exe"
@@ -78,4 +61,4 @@ if (-not (Test-Path $VenvPython)) {
 }
 & $VenvPython -m pip -q install --upgrade pip
 & $VenvPython -m pip -q install matplotlib numpy
-& $VenvPython (Join-Path $RepoRoot "Python_prototype\\plot_cpp_results.py")
+& $VenvPython (Join-Path $RepoRoot "experiments\\assignment\\plot_cpp_results.py")

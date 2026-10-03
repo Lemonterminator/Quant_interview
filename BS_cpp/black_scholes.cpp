@@ -172,8 +172,9 @@ void delta_call_par(const std::vector<double>& S,
 }
 
 // Gamma (call), scalar. Computes φ(d1) in log space to avoid overflow/underflow.
+// Degenerate inputs (S, σ or T ≤ 0) return 0, matching Gamma_par and the Python Gamma.
 double Gamma(double S, double K, double r, double q, double sigma, double T) {
-    if (T < 0 || S < 0 || sigma < 0) {
+    if (T <= 0.0 || S <= 0.0 || sigma <= 0.0) {
         return 0.0;
     }
     const double sT = sigma * std::sqrt(T);
