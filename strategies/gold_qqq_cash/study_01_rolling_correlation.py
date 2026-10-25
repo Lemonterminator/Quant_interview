@@ -507,8 +507,13 @@ def main():
     eps = pd.concat([eps, eps.apply(annotate_episode, axis=1)], axis=1)
 
     last = df.dropna(subset=["corr60"]).iloc[-1]
+    # load() may have fetched some series mid-run; record which snapshot each one came from.
+    manifest = dp._load_manifest()
+    provenance = {n: {k: manifest.get(n, {}).get(k) for k in ("last", "fetched_at_ny")}
+                  for n in ("QQQ", "GLD", "IAU", "GC_F", "VIX", "DXY", "DFII10")}
     results = {
         "sample": {"start": df.index[0].date().isoformat(), "end": df.index[-1].date().isoformat(), "days": len(df)},
+        "data": provenance,
         "latest": {"date": df.index[-1].date().isoformat(), "corr20": float(last.corr20), "corr60": float(last.corr60),
                    "corr60_robust": float(last.corr60_robust),
                    "state20": STATE_LABEL[int(last.state20)], "state60": STATE_LABEL[int(last.state60)]},

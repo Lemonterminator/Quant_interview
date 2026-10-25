@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import os
 import re
 import time
 from dataclasses import dataclass
@@ -37,8 +38,11 @@ NY = ZoneInfo("America/New_York")
 SESSION_FINAL_NY = (16, 30)
 MAX_AGE = timedelta(hours=20)
 # Yahoo's adj_close differs by ~1e-6 (relative) between identical calls, so
-# revisions are detected with a tolerance, never with an exact hash.
+# revisions are detected with a tolerance, never with an exact hash. Prices are
+# compared in log-return space (blind to the uniform rescale every dividend
+# causes); rates in absolute percentage points (they can be 0 or negative).
 REVISION_TOL = 1e-4
+RATE_REVISION_TOL = 1e-3
 
 
 @dataclass(frozen=True)
@@ -65,14 +69,32 @@ UNIVERSE: dict[str, Series] = {s.name: s for s in (
 
 # --------------------------------------------------------------------------- utils
 
+def _permanent(exc: Exception) -> bool:
+    """HTTP 4xx (bad id, forbidden) will not heal on retry; 429 is rate limiting."""
+    status = getattr(getattr(exc, "response", None), "status_code", None)
+    return status is not None and 400 <= status < 500 and status != 429
+
+
 def _retry(fn, *, tries: int = 4, base: float = 2.0):
     for attempt in range(tries):
         try:
             return fn()
-        except Exception:  # yfinance raises a zoo of types (rate limit, JSON, curl)
-            if attempt == tries - 1:
+        except Exception as exc:  # yfinance raises a zoo of types (rate limit, JSON, curl)
+            if attempt == tries - 1 or _permanent(exc):
                 raise
             time.sleep(base * 2 ** attempt)
+
+
+def _atomic_write(path: Path, write) -> None:
+    """Write via a temp file + rename so an interrupted run never leaves a
+    truncated file that the mtime-based freshness check would then trust."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    try:
+        write(tmp)
+        os.replace(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def _cache_path(series: Series) -> Path:
@@ -86,13 +108,44 @@ def _anchors(values: pd.Series, n: int = 6) -> dict[str, float]:
     return {d.date().isoformat(): float(f"{v:.8g}") for d, v in picks.items()}
 
 
-def _max_revision(values: pd.Series, anchors: dict[str, float]) -> float | None:
-    dates = pd.DatetimeIndex(list(anchors))
-    common = dates.intersection(values.index)
-    if common.empty:
-        return None
-    old = pd.Series(anchors).set_axis(dates).loc[common]
-    return float((values.loc[common] / old - 1).abs().max())
+def _revisions(new: pd.Series, old: pd.Series, kind: str) -> pd.Series:
+    """Per-date revision of ``new`` against ``old`` on their common dates.
+
+    Prices/levels: change in log return between consecutive common dates, so a
+    uniform rescale (new dividend or split) reads as zero while a patched print
+    does not. Rates: absolute change in level.
+    """
+    common = new.index.intersection(old.index)
+    a, b = new.loc[common], old.loc[common]
+    if kind == "rate":
+        return (a - b).abs()
+    return (np.log(a).diff() - np.log(b).diff()).abs().dropna()
+
+
+def revision_check(new: pd.Series, kind: str, *, old: pd.Series | None = None,
+                   anchors: dict[str, float] | None = None) -> dict:
+    """Compare a fresh download with the previous cache (every date) or, on a
+    fresh clone, with the committed manifest anchors (a few dates)."""
+    basis = "previous_cache" if old is not None else "anchors" if anchors else None
+    if basis == "anchors":
+        old = pd.Series(anchors).set_axis(pd.DatetimeIndex(list(anchors)))
+    if basis is None:
+        return {"revision_basis": None, "history_revised": False}
+    rev = _revisions(new, old, kind)
+    tol = RATE_REVISION_TOL if kind == "rate" else REVISION_TOL
+    bad = rev[rev > tol]
+    common = new.index.intersection(old.index)
+    rescale = None
+    if kind != "rate" and len(common):
+        rescale = float(np.median(new.loc[common] / old.loc[common]) - 1)
+    return {
+        "revision_basis": basis,
+        "compared_dates": len(common),
+        "max_revision": float(rev.max()) if len(rev) else None,
+        "revised_dates": [d.date().isoformat() for d in bad.index[:10]],
+        "rescale_vs_previous": rescale,
+        "history_revised": bool(len(bad)),
+    }
 
 
 # ----------------------------------------------------------------------- fetchers
@@ -129,11 +182,12 @@ def normalize_yahoo(raw: pd.DataFrame, now: datetime | None = None) -> pd.DataFr
     if "adj_close" not in df:
         df["adj_close"] = df["close"]
 
+    # A bar dated after today (futures evening session) is never final; today's
+    # bar is final only after the cash close.
     now_ny = (now or datetime.now(NY)).astimezone(NY)
     today = pd.Timestamp(now_ny.date())
-    if len(df) and df.index[-1] >= today and (now_ny.hour, now_ny.minute) < SESSION_FINAL_NY:
-        df = df[df.index < today]
-    return df
+    final = (now_ny.hour, now_ny.minute) >= SESSION_FINAL_NY
+    return df[df.index <= today] if final else df[df.index < today]
 
 
 def fetch_fred_raw(series_id: str) -> str:
@@ -197,6 +251,11 @@ def _load_manifest() -> dict:
     return json.loads(MANIFEST.read_text(encoding="utf-8")) if MANIFEST.exists() else {}
 
 
+def _write_manifest(manifest: dict) -> None:
+    text = json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
+    _atomic_write(MANIFEST, lambda p: p.write_text(text, encoding="utf-8"))
+
+
 def update(names: list[str] | None = None, *, refresh: bool = False, now: datetime | None = None) -> dict:
     manifest = _load_manifest()
     now = now or datetime.now(NY)
@@ -212,25 +271,25 @@ def update(names: list[str] | None = None, *, refresh: bool = False, now: dateti
         else:
             df = normalize_fred(fetch_fred_raw(s.symbol), s.symbol)
         issues = validate(df, name, kind=s.kind)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        df.to_csv(path, float_format="%.8g")
 
         prev = manifest.get(name, {})
-        # Each new dividend rescales every earlier adj_close; vendors also patch
-        # bad prints. Compare against the committed anchors so either is visible.
-        revision = _max_revision(df["adj_close"], prev["anchors"]) if prev.get("anchors") else None
+        # Vendors patch bad prints; every new dividend also rescales all earlier
+        # adj_close values, which revision_check deliberately ignores.
+        old = pd.read_csv(path, index_col="date", parse_dates=["date"])["adj_close"] if path.exists() else None
+        revision = revision_check(df["adj_close"], s.kind, old=old, anchors=prev.get("anchors"))
+        _atomic_write(path, lambda p: df.to_csv(p, float_format="%.8g"))
         manifest[name] = {
             "source": s.source, "symbol": s.symbol, "role": s.role,
             "rows": len(df), "first": df.index[0].date().isoformat(), "last": df.index[-1].date().isoformat(),
             "anchors": _anchors(df["adj_close"]),
-            "max_revision_vs_previous": revision,
-            "history_revised": revision is not None and revision > REVISION_TOL,
+            "revision": revision,
             "fetched_at_ny": now.astimezone(NY).isoformat(timespec="seconds"),
             "issues": issues,
         }
-        print(f"{name:7s} {s.symbol:9s} rows={len(df):6d} {manifest[name]['first']} -> {manifest[name]['last']}")
-    MANIFEST.parent.mkdir(parents=True, exist_ok=True)
-    MANIFEST.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        # Persist per series so a later failure cannot leave cache and manifest out of step.
+        _write_manifest(manifest)
+        flag = "  REVISED " + ",".join(revision["revised_dates"]) if revision["history_revised"] else ""
+        print(f"{name:7s} {s.symbol:9s} rows={len(df):6d} {manifest[name]['first']} -> {manifest[name]['last']}{flag}")
     return manifest
 
 
@@ -250,12 +309,20 @@ def aligned_prices(names: list[str], field: str = "adj_close") -> pd.DataFrame:
     return frame.dropna()
 
 
+def asof_align(s: pd.Series, index: pd.DatetimeIndex, max_stale_days: int = 5) -> pd.Series:
+    """Last value of ``s`` dated on or before each date of ``index``, if it is at
+    most ``max_stale_days`` calendar days old (row counts depend on the calendar)."""
+    s = s.dropna()
+    left = pd.DataFrame({"date": pd.DatetimeIndex(index).astype("datetime64[ns]")})
+    right = pd.DataFrame({"date": s.index.astype("datetime64[ns]"), "value": s.to_numpy()})
+    out = pd.merge_asof(left, right, on="date", direction="backward", tolerance=pd.Timedelta(days=max_stale_days))
+    return pd.Series(out["value"].to_numpy(), index=index, name=s.name)
+
+
 def asof_on(index: pd.DatetimeIndex, name: str, field: str = "close", max_stale_days: int = 5) -> pd.Series:
     """Align a conditioning series (different calendar, e.g. FRED) onto ``index``
     using only values known on or before each date."""
-    s = load(name)[field]
-    out = s.reindex(s.index.union(index)).ffill(limit=max_stale_days)
-    return out.reindex(index)
+    return asof_align(load(name)[field].rename(name), index, max_stale_days)
 
 
 if __name__ == "__main__":

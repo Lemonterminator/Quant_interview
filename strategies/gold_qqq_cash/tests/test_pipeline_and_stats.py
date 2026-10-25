@@ -8,6 +8,7 @@ Run from the repository root::
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
 from datetime import datetime
 from pathlib import Path
@@ -54,6 +55,12 @@ class NormalizeYahooTests(unittest.TestCase):
         self.assertEqual(intraday.index[-1], pd.Timestamp("2024-03-07"))
         self.assertEqual(after.index[-1], pd.Timestamp("2024-03-08"))
 
+    def test_drops_future_dated_futures_bar_in_the_evening(self):
+        # Sunday 20:00 ET: the futures session already prints a Monday bar.
+        raw = _yahoo_frame(["2024-03-08", "2024-03-11"])
+        out = dp.normalize_yahoo(raw, now=datetime(2024, 3, 10, 20, tzinfo=dp.NY))
+        self.assertEqual(out.index[-1], pd.Timestamp("2024-03-08"))
+
 
 class NormalizeFredTests(unittest.TestCase):
     def test_both_header_styles_and_missing_dots(self):
@@ -81,11 +88,88 @@ class ValidateTests(unittest.TestCase):
         self.assertIn("2024-01-03", issues["abs_log_return_over_15pct"])
         self.assertEqual(issues["zero_volume_days"], 1)
 
-    def test_revision_detection_tolerates_vendor_noise(self):
-        s = pd.Series([10.0, 11.0, 12.0], index=pd.DatetimeIndex(["2024-01-02", "2024-01-03", "2024-01-04"]))
-        anchors = dp._anchors(s, n=3)
-        self.assertLess(dp._max_revision(s * (1 + 1e-6), anchors), dp.REVISION_TOL)
-        self.assertGreater(dp._max_revision(s * 0.995, anchors), dp.REVISION_TOL)
+
+
+class RevisionTests(unittest.TestCase):
+    def setUp(self):
+        idx = pd.bdate_range("2024-01-02", periods=50)
+        self.old = pd.Series(100 * np.exp(np.cumsum(np.full(50, 0.001))), index=idx)
+
+    def test_vendor_noise_is_not_a_revision(self):
+        noisy = self.old * (1 + 1e-6 * np.sin(np.arange(50)))
+        self.assertFalse(dp.revision_check(noisy, "price", old=self.old)["history_revised"])
+
+    def test_dividend_rescale_is_not_a_revision(self):
+        # A new dividend rescales every earlier adj_close by ~1e-3 (QQQ) to 3e-3 (BIL).
+        rescaled = self.old * (1 - 0.003)
+        for basis in ({"old": self.old}, {"anchors": dp._anchors(self.old)}):
+            res = dp.revision_check(rescaled, "price", **basis)
+            self.assertFalse(res["history_revised"], basis.keys())
+            self.assertAlmostEqual(res["rescale_vs_previous"], -0.003, places=7)  # anchors keep 8 sig. digits
+
+    def test_patched_print_is_found_on_every_date_not_only_anchors(self):
+        patched = self.old.copy()
+        patched.iloc[17] *= 1.01  # between anchors
+        res = dp.revision_check(patched, "price", old=self.old)
+        self.assertTrue(res["history_revised"])
+        self.assertEqual(res["revised_dates"][0], self.old.index[17].date().isoformat())
+        self.assertEqual(res["revision_basis"], "previous_cache")
+
+    def test_rates_use_absolute_tolerance_and_survive_zero(self):
+        idx = pd.bdate_range("2024-01-02", periods=4)
+        old = pd.Series([0.0, 0.01, -0.05, 4.04], index=idx)
+        same = dp.revision_check(old + 1e-9, "rate", old=old)
+        self.assertFalse(same["history_revised"])
+        moved = dp.revision_check(old.where(old != 0.0, 0.02), "rate", old=old)
+        self.assertTrue(moved["history_revised"])
+        self.assertTrue(np.isfinite(moved["max_revision"]))
+
+    def test_no_reference_means_no_claim(self):
+        self.assertEqual(dp.revision_check(self.old, "price"), {"revision_basis": None, "history_revised": False})
+
+
+class RobustnessTests(unittest.TestCase):
+    def test_atomic_write_keeps_old_file_on_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "x.csv"
+            path.write_text("old\n")
+
+            def broken(p):
+                p.write_text("partial")
+                raise OSError("disk full")
+
+            with self.assertRaises(OSError):
+                dp._atomic_write(path, broken)
+            self.assertEqual(path.read_text(), "old\n")
+            self.assertEqual(sorted(q.name for q in Path(tmp).iterdir()), ["x.csv"])
+
+    def test_retry_gives_up_at_once_on_permanent_http_errors(self):
+        class Resp:
+            def __init__(self, status):
+                self.status_code = status
+
+        class HTTPError(Exception):
+            def __init__(self, status):
+                self.response = Resp(status)
+
+        for status, expected_calls in ((404, 1), (429, 3), (503, 3)):
+            calls = []
+
+            def fn():
+                calls.append(1)
+                raise HTTPError(status)
+
+            with self.subTest(status=status), self.assertRaises(HTTPError):
+                dp._retry(fn, tries=3, base=0)
+            self.assertEqual(len(calls), expected_calls)
+
+    def test_asof_staleness_is_in_calendar_days(self):
+        s = pd.Series([1.0, 2.0], index=pd.DatetimeIndex(["2024-03-01", "2024-03-04"]))  # Fri, Mon
+        idx = pd.bdate_range("2024-03-01", "2024-03-15")
+        out = dp.asof_align(s, idx, max_stale_days=5)
+        self.assertEqual(out.loc["2024-03-01"], 1.0)
+        self.assertEqual(out.loc["2024-03-08"], 2.0)  # 4 calendar days old
+        self.assertTrue(out.loc["2024-03-11":].isna().all())  # 7+ days old, only 5 rows later
 
 
 class StatsTests(unittest.TestCase):
