@@ -1,0 +1,272 @@
+{
+  "sample": {
+    "start": "2004-11-19",
+    "end": "2026-10-23",
+    "days": 5516
+  },
+  "latest": {
+    "date": "2026-10-23",
+    "corr20": 0.435731990921578,
+    "corr60": 0.3164333670304321,
+    "corr60_robust": 0.3408128716818834,
+    "state20": "neutral",
+    "state60": "liquidity (+)"
+  },
+  "distribution": {
+    "corr20": {
+      "mean": 0.056023156310061266,
+      "median": 0.071307338925734,
+      "share_positive": 0.5710659898477157,
+      "share_liquidity": 0.13977519941986946,
+      "share_haven": 0.08828861493836113
+    },
+    "corr60": {
+      "mean": 0.054731031701121945,
+      "median": 0.050582589044608,
+      "share_positive": 0.5656272661348803,
+      "share_liquidity": 0.23640319071791152,
+      "share_haven": 0.11602610587382162
+    }
+  },
+  "null_models": {
+    "full_sample_rho": 0.06034842328593785,
+    "w20": {
+      "critical_r": 0.44252780662189833,
+      "observed": {
+        "sign_flips_per_year": 14.990722212115699,
+        "share_abs_above_crit": 0.22806381435823062,
+        "significant_flips": 36,
+        "std": 0.3352061016548182
+      },
+      "gaussian_const_rho": {
+        "sign_flips_per_year": [
+          22.79583045297435,
+          20.53087138439149,
+          25.216045115517556
+        ],
+        "share_abs_above_crit": [
+          0.05886209813874789,
+          0.044017403915881076,
+          0.07525380710659899
+        ],
+        "significant_flips": [
+          23.5,
+          16.0,
+          32.0
+        ],
+        "std": 0.22963268418710317
+      },
+      "circular_shift": {
+        "sign_flips_per_year": [
+          22.88293250864108,
+          20.306239767145716,
+          24.984537020192832
+        ],
+        "share_abs_above_crit": [
+          0.05054387237128354,
+          0.03731870920957216,
+          0.06601704133430022
+        ],
+        "significant_flips": [
+          26.526666666666667,
+          18.0,
+          34.0
+        ],
+        "std": 0.22931734002434506
+      }
+    },
+    "w60": {
+      "critical_r": 0.25392916518337916,
+      "observed": {
+        "sign_flips_per_year": 5.633864760857614,
+        "share_abs_above_crit": 0.35242929659173317,
+        "significant_flips": 16,
+        "std": 0.2641294227491837
+      },
+      "gaussian_const_rho": {
+        "sign_flips_per_year": [
+          11.824343045629467,
+          9.74150632215503,
+          14.269378779549202
+        ],
+        "share_abs_above_crit": [
+          0.07664068165337201,
+          0.048332124728063815,
+          0.1089738941261784
+        ],
+        "significant_flips": [
+          6.46,
+          2.0,
+          12.0
+        ],
+        "std": 0.13055545893618034
+      },
+      "circular_shift": {
+        "sign_flips_per_year": [
+          12.71714128642111,
+          10.665090709180868,
+          14.962067069818582
+        ],
+        "share_abs_above_crit": [
+          0.04896120377084844,
+          0.027728426395939088,
+          0.07561638868745468
+        ],
+        "significant_flips": [
+          9.556666666666667,
+          5.0,
+          14.0
+        ],
+        "std": 0.12970643419697583
+      }
+    }
+  },
+  "episodes60": {
+    "count": 87,
+    "liquidity": 52,
+    "haven": 35,
+    "median_days": 6.0,
+    "max_days": 181,
+    "at_least_20d": 24,
+    "at_least_20d_liquidity": 14,
+    "at_least_20d_haven": 10
+  },
+  "ex_ante": {
+    "w20": {
+      "corr_now_vs_next_all": 0.42577747470779914,
+      "corr_now_vs_next_nonoverlap": 0.4091989997401198,
+      "n_nonoverlap": 274,
+      "transition_nonoverlap": {
+        "safe-haven (-)": {
+          "safe-haven (-)": 0.238,
+          "neutral": 0.714,
+          "liquidity (+)": 0.048
+        },
+        "neutral": {
+          "safe-haven (-)": 0.074,
+          "neutral": 0.829,
+          "liquidity (+)": 0.097
+        },
+        "liquidity (+)": {
+          "safe-haven (-)": 0.0,
+          "neutral": 0.568,
+          "liquidity (+)": 0.432
+        }
+      }
+    },
+    "w60": {
+      "corr_now_vs_next_all": 0.32122511119486474,
+      "corr_now_vs_next_nonoverlap": 0.36325304607078235,
+      "n_nonoverlap": 90,
+      "transition_nonoverlap": {
+        "safe-haven (-)": {
+          "safe-haven (-)": 0.333,
+          "neutral": 0.556,
+          "liquidity (+)": 0.111
+        },
+        "neutral": {
+          "safe-haven (-)": 0.097,
+          "neutral": 0.71,
+          "liquidity (+)": 0.194
+        },
+        "liquidity (+)": {
+          "safe-haven (-)": 0.0,
+          "neutral": 0.632,
+          "liquidity (+)": 0.368
+        }
+      }
+    },
+    "tail_days": {
+      "qqq_cutoff": -0.021895952260930662,
+      "by_prior_state": {
+        "all": {
+          "n": 276,
+          "gld_mean_bp": -1.4172176812089987,
+          "gld_t_stat": -0.13191140709386986,
+          "gld_hit_rate": 0.4601449275362319,
+          "qqq_mean_bp": -328.16863281812834
+        },
+        "liquidity (+)": {
+          "n": 56,
+          "gld_mean_bp": -51.8115655004403,
+          "gld_t_stat": -2.5305147103284287,
+          "gld_hit_rate": 0.23214285714285715,
+          "qqq_mean_bp": -305.22263173397045
+        },
+        "neutral": {
+          "n": 165,
+          "gld_mean_bp": -3.949807779412404,
+          "gld_t_stat": -0.33168312186970245,
+          "gld_hit_rate": 0.48484848484848486,
+          "qqq_mean_bp": -316.6445489882854
+        },
+        "safe-haven (-)": {
+          "n": 55,
+          "gld_mean_bp": 57.49116130207309,
+          "gld_t_stat": 1.725192121453879,
+          "gld_hit_rate": 0.6181818181818182,
+          "qqq_mean_bp": -386.10408541152685
+        }
+      }
+    },
+    "next_60d_nonoverlap": {
+      "liquidity (+)": {
+        "n": 19,
+        "corr_next_mean": 0.1990968209036409,
+        "div_ratio_next_mean": 0.7799291732588107,
+        "n_qqq_down": 4,
+        "gld_next_when_qqq_down_mean": 0.06001438116141666
+      },
+      "neutral": {
+        "n": 61,
+        "corr_next_mean": 0.015715281498060934,
+        "div_ratio_next_mean": 0.7211817272338334,
+        "n_qqq_down": 15,
+        "gld_next_when_qqq_down_mean": 0.03996921463118328
+      },
+      "safe-haven (-)": {
+        "n": 10,
+        "corr_next_mean": -0.047357896627299015,
+        "div_ratio_next_mean": 0.6968226438541855,
+        "n_qqq_down": 3,
+        "gld_next_when_qqq_down_mean": -0.09508877579097448
+      }
+    }
+  },
+  "robustness": {
+    "iau_vs_gld_corr60_max_abs_diff": 0.07090248247529368,
+    "iau_vs_gld_corr60_mean_abs_diff": 0.008520568366659409,
+    "lead_lag_corr_qqq_t_vs_gold_t_plus_k": {
+      "GLD": {
+        "-1": -0.0287,
+        "0": 0.0606,
+        "1": 0.0398
+      },
+      "GC_F": {
+        "-1": -0.0116,
+        "0": 0.0339,
+        "1": 0.0478
+      }
+    },
+    "gcf_vs_gld_corr60_mean_abs_diff": 0.06818038289406846,
+    "gcf_vs_gld_corr60_mean_diff": -0.030988346002436717,
+    "weekly13_vs_daily60": {
+      "corr": 0.7121475848916416,
+      "sign_agreement": 0.7570671378091873,
+      "full_sample_weekly_corr": 0.06814665031481323,
+      "full_sample_daily_corr": 0.06034842328593785
+    }
+  },
+  "outlier_sensitivity": {
+    "corr_raw_vs_robust": 0.9783924390260377,
+    "mean_abs_diff": 0.034400696903083665,
+    "state_agreement": 0.9404083134081295,
+    "opposite_state_share": 0.0,
+    "max_1d_jump_raw": 0.41853793035993725,
+    "max_1d_jump_raw_date": "2025-07-08",
+    "max_1d_jump_robust": 0.3123635240701131,
+    "p99_1d_jump_raw": 0.10952333894899018,
+    "p99_1d_jump_robust": 0.1022732959656316,
+    "significant_flips_robust": 18
+  }
+}

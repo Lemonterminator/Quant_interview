@@ -14,6 +14,7 @@ Run commands below from the repository root.
 | `tests/`, `testdata/` | Python contracts and shared Python/C++ golden cases. |
 | `benchmarks/` | Python throughput benchmark. |
 | `docs/` | Assignment plan and batch testing notes. |
+| `strategies/gold_qqq_cash/` | Cash / gold / QQQ sub-strategy research: data pipeline (Yahoo + FRED), studies, reports and artifacts. See its README. |
 
 The pricing imports and C++ target names stay stable. The former Python experiment paths remain thin wrappers, so existing commands such as `python Python_prototype/black_scholes_test.py` still work. New work should use the canonical scripts in `experiments/assignment/`.
 
