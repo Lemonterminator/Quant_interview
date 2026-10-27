@@ -271,5 +271,30 @@
       "gaps_over_7d": [],
       "longest_stale_run": 16
     }
+  },
+  "VIX_1600": {
+    "source": "yahoo_1h",
+    "symbol": "^VIX",
+    "role": "VIX at 16:00 ET (close of the 15:00 hourly bar); Yahoo serves ~730d of hourly bars, so this cache accumulates instead of being replaced",
+    "rows": 695,
+    "first": "2024-01-09",
+    "last": "2026-10-26",
+    "anchors": {
+      "2024-01-09": 12.79,
+      "2024-07-30": 17.209999,
+      "2025-02-21": 18.379999,
+      "2025-09-12": 14.72,
+      "2026-04-08": 21.030001,
+      "2026-10-26": 18.51
+    },
+    "revision": {
+      "revision_basis": null,
+      "history_revised": false
+    },
+    "fetched_at_ny": "2026-10-26T22:36:41-04:00",
+    "issues": {
+      "gaps_over_7d": [],
+      "longest_stale_run": 1
+    }
   }
 }

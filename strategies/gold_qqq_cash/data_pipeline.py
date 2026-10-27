@@ -48,7 +48,7 @@ RATE_REVISION_TOL = 1e-3
 @dataclass(frozen=True)
 class Series:
     name: str
-    source: str  # "yahoo" or "fred"
+    source: str  # "yahoo", "yahoo_1h" (daily value taken from hourly bars) or "fred"
     symbol: str
     role: str
     kind: str = "price"  # "price" (tradeable), "level" (index/vol level) or "rate" (percent)
@@ -59,7 +59,9 @@ UNIVERSE: dict[str, Series] = {s.name: s for s in (
     Series("GLD", "yahoo", "GLD", "gold leg (SPDR Gold Shares), since 2004-11; closes 16:00 ET like QQQ"),
     Series("IAU", "yahoo", "IAU", "gold cross-check (iShares Gold Trust)"),
     Series("GC_F", "yahoo", "GC=F", "COMEX front-month gold; diagnostic only (settles 13:30 ET, roll jumps)"),
-    Series("VIX", "yahoo", "^VIX", "equity implied vol, conditioning variable", "level"),
+    Series("VIX", "yahoo", "^VIX", "equity implied vol, conditioning variable; daily close is the 16:15 ET print", "level"),
+    Series("VIX_1600", "yahoo_1h", "^VIX", "VIX at 16:00 ET (close of the 15:00 hourly bar); Yahoo serves ~730d of "
+           "hourly bars, so this cache accumulates instead of being replaced", "level"),
     Series("DXY", "yahoo", "DX-Y.NYB", "US dollar index, conditioning variable", "level"),
     Series("BIL", "yahoo", "BIL", "1-3M T-bill ETF, cash-leg proxy"),
     Series("DFII10", "fred", "DFII10", "10Y TIPS real yield (%), conditioning variable", "rate"),
@@ -190,6 +192,46 @@ def normalize_yahoo(raw: pd.DataFrame, now: datetime | None = None) -> pd.DataFr
     return df[df.index <= today] if final else df[df.index < today]
 
 
+def fetch_yahoo_hourly_raw(symbol: str) -> pd.DataFrame:
+    import yfinance as yf
+
+    def call():
+        # Hourly history is capped at 730 calendar days by Yahoo.
+        df = yf.Ticker(symbol).history(period="730d", interval="1h")
+        if df is None or df.empty:
+            raise RuntimeError(f"yahoo returned no hourly rows for {symbol}")
+        return df
+
+    return _retry(call)
+
+
+def normalize_hourly_at(raw: pd.DataFrame, bar_start: str = "15:00", now: datetime | None = None) -> pd.DataFrame:
+    """Daily series of the close of the hourly bar that *starts* at ``bar_start``
+    New York time (Yahoo labels bars by their start; the 15:00 bar closes at 16:00).
+    Converting to New York first keeps the bar fixed across DST changes."""
+    idx = pd.DatetimeIndex(raw.index)
+    idx = idx.tz_convert(NY) if idx.tz is not None else idx.tz_localize(NY)
+    bars = raw.set_axis(idx)
+    bars = bars[bars.index.strftime("%H:%M") == bar_start]
+    out = pd.DataFrame({"close": bars["Close"].to_numpy()},
+                       index=pd.DatetimeIndex(bars.index.tz_localize(None).normalize(), name="date"))
+    out = out[~out.index.duplicated(keep="last")].sort_index().dropna()
+    out["adj_close"] = out["close"]
+    now_ny = (now or datetime.now(NY)).astimezone(NY)
+    today = pd.Timestamp(now_ny.date())
+    final = (now_ny.hour, now_ny.minute) >= SESSION_FINAL_NY
+    return out[out.index <= today] if final else out[out.index < today]
+
+
+def merge_history(new: pd.DataFrame, old: pd.DataFrame | None) -> pd.DataFrame:
+    """Keep cached dates the vendor no longer serves; fresh rows win on overlap.
+    Only for unadjusted series: an adjusted price must never be stitched this way."""
+    if old is None:
+        return new
+    keep = old.loc[~old.index.isin(new.index), new.columns.intersection(old.columns)]
+    return pd.concat([keep, new]).sort_index()
+
+
 def fetch_fred_raw(series_id: str) -> str:
     import requests
 
@@ -266,8 +308,11 @@ def update(names: list[str] | None = None, *, refresh: bool = False, now: dateti
             age = now.timestamp() - path.stat().st_mtime
             if age < MAX_AGE.total_seconds():
                 continue
+        cached = pd.read_csv(path, index_col="date", parse_dates=["date"]) if path.exists() else None
         if s.source == "yahoo":
             df = normalize_yahoo(fetch_yahoo_raw(s.symbol), now=now)
+        elif s.source == "yahoo_1h":
+            df = merge_history(normalize_hourly_at(fetch_yahoo_hourly_raw(s.symbol), now=now), cached)
         else:
             df = normalize_fred(fetch_fred_raw(s.symbol), s.symbol)
         issues = validate(df, name, kind=s.kind)
@@ -275,7 +320,7 @@ def update(names: list[str] | None = None, *, refresh: bool = False, now: dateti
         prev = manifest.get(name, {})
         # Vendors patch bad prints; every new dividend also rescales all earlier
         # adj_close values, which revision_check deliberately ignores.
-        old = pd.read_csv(path, index_col="date", parse_dates=["date"])["adj_close"] if path.exists() else None
+        old = cached["adj_close"] if cached is not None else None
         revision = revision_check(df["adj_close"], s.kind, old=old, anchors=prev.get("anchors"))
         _atomic_write(path, lambda p: df.to_csv(p, float_format="%.8g"))
         manifest[name] = {

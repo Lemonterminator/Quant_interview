@@ -344,6 +344,7 @@ def by_year(df: pd.DataFrame) -> pd.DataFrame:
 def _style(ax):
     ax.set_facecolor(SURFACE)
     ax.grid(True, color=GRID, linewidth=0.6)
+    ax.set_axisbelow(True)  # gridlines under bars, not striped across them
     ax.tick_params(colors=INK_2, labelsize=8)
     for side in ("top", "right"):
         ax.spines[side].set_visible(False)
