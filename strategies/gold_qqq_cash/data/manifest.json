@@ -1,0 +1,300 @@
+{
+  "QQQ": {
+    "source": "yahoo",
+    "symbol": "QQQ",
+    "role": "risk asset (Nasdaq-100 ETF), since 1999-03",
+    "rows": 6950,
+    "first": "1999-03-10",
+    "last": "2026-10-23",
+    "anchors": {
+      "1999-03-10": 42.982277,
+      "2004-09-17": 29.835144,
+      "2010-03-26": 41.617489,
+      "2015-10-02": 96.117424,
+      "2021-04-13": 329.82199,
+      "2026-10-23": 704.40002
+    },
+    "revision": {
+      "revision_basis": "previous_cache",
+      "compared_dates": 6950,
+      "max_revision": 2.0432172247453195e-06,
+      "revised_dates": [],
+      "rescale_vs_previous": -6.346854153349568e-10,
+      "history_revised": false
+    },
+    "fetched_at_ny": "2026-10-25T03:59:29-04:00",
+    "issues": {
+      "gaps_over_7d": [],
+      "longest_stale_run": 2,
+      "abs_log_return_over_15pct": {
+        "2001-01-03": 0.1557
+      },
+      "zero_volume_days": 0
+    }
+  },
+  "GLD": {
+    "source": "yahoo",
+    "symbol": "GLD",
+    "role": "gold leg (SPDR Gold Shares), since 2004-11; closes 16:00 ET like QQQ",
+    "rows": 5517,
+    "first": "2004-11-18",
+    "last": "2026-10-23",
+    "anchors": {
+      "2004-11-18": 44.380001,
+      "2009-04-08": 86.610001,
+      "2013-08-26": 135.45,
+      "2018-01-11": 125.44,
+      "2022-05-31": 171.14,
+      "2026-10-23": 366.60999
+    },
+    "revision": {
+      "revision_basis": "previous_cache",
+      "compared_dates": 5517,
+      "max_revision": 7.2882889945447e-08,
+      "revised_dates": [],
+      "rescale_vs_previous": 0.0,
+      "history_revised": false
+    },
+    "fetched_at_ny": "2026-10-25T03:59:29-04:00",
+    "issues": {
+      "gaps_over_7d": [],
+      "longest_stale_run": 1,
+      "abs_log_return_over_15pct": {},
+      "zero_volume_days": 0
+    }
+  },
+  "IAU": {
+    "source": "yahoo",
+    "symbol": "IAU",
+    "role": "gold cross-check (iShares Gold Trust)",
+    "rows": 5469,
+    "first": "2005-01-28",
+    "last": "2026-10-23",
+    "anchors": {
+      "2005-01-28": 8.5380001,
+      "2009-06-03": 18.902,
+      "2013-10-07": 25.68,
+      "2018-02-08": 25.299999,
+      "2022-06-14": 34.34,
+      "2026-10-23": 75.150002
+    },
+    "revision": {
+      "revision_basis": "previous_cache",
+      "compared_dates": 5469,
+      "max_revision": 7.56199316498396e-08,
+      "revised_dates": [],
+      "rescale_vs_previous": 0.0,
+      "history_revised": false
+    },
+    "fetched_at_ny": "2026-10-25T03:59:29-04:00",
+    "issues": {
+      "gaps_over_7d": [],
+      "longest_stale_run": 2,
+      "abs_log_return_over_15pct": {},
+      "zero_volume_days": 0
+    }
+  },
+  "GC_F": {
+    "source": "yahoo",
+    "symbol": "GC=F",
+    "role": "COMEX front-month gold; diagnostic only (settles 13:30 ET, roll jumps)",
+    "rows": 6563,
+    "first": "2000-08-30",
+    "last": "2026-10-23",
+    "anchors": {
+      "2000-08-30": 273.89999,
+      "2005-12-08": 519.29999,
+      "2011-02-25": 1408.7,
+      "2016-05-16": 1273.4,
+      "2021-08-05": 1808.9,
+      "2026-10-23": 4007.8999
+    },
+    "revision": {
+      "revision_basis": "previous_cache",
+      "compared_dates": 6563,
+      "max_revision": 9.298383041311808e-08,
+      "revised_dates": [],
+      "rescale_vs_previous": 0.0,
+      "history_revised": false
+    },
+    "fetched_at_ny": "2026-10-25T03:59:29-04:00",
+    "issues": {
+      "gaps_over_7d": [],
+      "longest_stale_run": 2,
+      "abs_log_return_over_15pct": {},
+      "zero_volume_days": 418
+    }
+  },
+  "VIX": {
+    "source": "yahoo",
+    "symbol": "^VIX",
+    "role": "equity implied vol, conditioning variable",
+    "rows": 9273,
+    "first": "1990-01-02",
+    "last": "2026-10-23",
+    "anchors": {
+      "1990-01-02": 17.24,
+      "1997-05-01": 19.870001,
+      "2004-09-15": 14.64,
+      "2012-01-26": 18.57,
+      "2019-06-11": 15.99,
+      "2026-10-23": 19.450001
+    },
+    "revision": {
+      "revision_basis": "previous_cache",
+      "compared_dates": 9273,
+      "max_revision": 8.936473694376446e-08,
+      "revised_dates": [],
+      "rescale_vs_previous": 0.0,
+      "history_revised": false
+    },
+    "fetched_at_ny": "2026-10-25T03:59:29-04:00",
+    "issues": {
+      "gaps_over_7d": [],
+      "longest_stale_run": 2
+    }
+  },
+  "DXY": {
+    "source": "yahoo",
+    "symbol": "DX-Y.NYB",
+    "role": "US dollar index, conditioning variable",
+    "rows": 14171,
+    "first": "1971-01-04",
+    "last": "2026-10-23",
+    "anchors": {
+      "1971-01-04": 120.53,
+      "1982-05-11": 109.7,
+      "1993-05-12": 90.580002,
+      "2004-04-29": 90.57,
+      "2015-07-20": 98.029999,
+      "2026-10-23": 101.81
+    },
+    "revision": {
+      "revision_basis": "previous_cache",
+      "compared_dates": 14171,
+      "max_revision": 7.504829646620692e-08,
+      "revised_dates": [],
+      "rescale_vs_previous": 0.0,
+      "history_revised": false
+    },
+    "fetched_at_ny": "2026-10-25T03:59:29-04:00",
+    "issues": {
+      "gaps_over_7d": [],
+      "longest_stale_run": 11
+    }
+  },
+  "BIL": {
+    "source": "yahoo",
+    "symbol": "BIL",
+    "role": "1-3M T-bill ETF, cash-leg proxy",
+    "rows": 4883,
+    "first": "2007-05-30",
+    "last": "2026-10-23",
+    "anchors": {
+      "2007-05-30": 69.960999,
+      "2011-04-12": 73.030487,
+      "2015-03-02": 72.810745,
+      "2019-01-16": 74.667747,
+      "2022-11-30": 77.139198,
+      "2026-10-23": 91.629997
+    },
+    "revision": {
+      "revision_basis": "previous_cache",
+      "compared_dates": 4883,
+      "max_revision": 1.7801700575859059e-06,
+      "revised_dates": [],
+      "rescale_vs_previous": -5.0009064667122516e-09,
+      "history_revised": false
+    },
+    "fetched_at_ny": "2026-10-25T03:59:29-04:00",
+    "issues": {
+      "gaps_over_7d": [],
+      "longest_stale_run": 18,
+      "abs_log_return_over_15pct": {},
+      "zero_volume_days": 0
+    }
+  },
+  "DFII10": {
+    "source": "fred",
+    "symbol": "DFII10",
+    "role": "10Y TIPS real yield (%), conditioning variable",
+    "rows": 5956,
+    "first": "2003-01-02",
+    "last": "2026-10-22",
+    "anchors": {
+      "2003-01-02": 2.43,
+      "2007-10-03": 2.25,
+      "2012-07-06": -0.53,
+      "2017-04-12": 0.38,
+      "2022-01-14": -0.66,
+      "2026-10-22": 2.64
+    },
+    "revision": {
+      "revision_basis": "previous_cache",
+      "compared_dates": 5956,
+      "max_revision": 0.0,
+      "revised_dates": [],
+      "rescale_vs_previous": null,
+      "history_revised": false
+    },
+    "fetched_at_ny": "2026-10-25T03:59:29-04:00",
+    "issues": {
+      "gaps_over_7d": [],
+      "longest_stale_run": 3
+    }
+  },
+  "DTB3": {
+    "source": "fred",
+    "symbol": "DTB3",
+    "role": "3M T-bill discount rate (%), cash-leg yield",
+    "rows": 18193,
+    "first": "1954-01-04",
+    "last": "2026-10-22",
+    "anchors": {
+      "1954-01-04": 1.33,
+      "1968-07-18": 5.34,
+      "1983-02-25": 7.82,
+      "1997-09-17": 4.97,
+      "2012-04-03": 0.08,
+      "2026-10-22": 4.04
+    },
+    "revision": {
+      "revision_basis": "previous_cache",
+      "compared_dates": 18193,
+      "max_revision": 0.0,
+      "revised_dates": [],
+      "rescale_vs_previous": null,
+      "history_revised": false
+    },
+    "fetched_at_ny": "2026-10-25T03:59:29-04:00",
+    "issues": {
+      "gaps_over_7d": [],
+      "longest_stale_run": 16
+    }
+  },
+  "VIX_1600": {
+    "source": "yahoo_1h",
+    "symbol": "^VIX",
+    "role": "VIX at 16:00 ET (close of the 15:00 hourly bar); Yahoo serves ~730d of hourly bars, so this cache accumulates instead of being replaced",
+    "rows": 695,
+    "first": "2024-01-09",
+    "last": "2026-10-26",
+    "anchors": {
+      "2024-01-09": 12.79,
+      "2024-07-30": 17.209999,
+      "2025-02-21": 18.379999,
+      "2025-09-12": 14.72,
+      "2026-04-08": 21.030001,
+      "2026-10-26": 18.51
+    },
+    "revision": {
+      "revision_basis": null,
+      "history_revised": false
+    },
+    "fetched_at_ny": "2026-10-26T22:36:41-04:00",
+    "issues": {
+      "gaps_over_7d": [],
+      "longest_stale_run": 1
+    }
+  }
+}

@@ -1,0 +1,302 @@
+{
+  "sample": {
+    "start": "2004-11-19",
+    "end": "2026-10-23",
+    "days": 5516
+  },
+  "data": {
+    "QQQ": {
+      "last": "2026-10-23",
+      "fetched_at_ny": "2026-10-25T03:59:29-04:00"
+    },
+    "GLD": {
+      "last": "2026-10-23",
+      "fetched_at_ny": "2026-10-25T03:59:29-04:00"
+    },
+    "IAU": {
+      "last": "2026-10-23",
+      "fetched_at_ny": "2026-10-25T03:59:29-04:00"
+    },
+    "GC_F": {
+      "last": "2026-10-23",
+      "fetched_at_ny": "2026-10-25T03:59:29-04:00"
+    },
+    "VIX": {
+      "last": "2026-10-23",
+      "fetched_at_ny": "2026-10-25T03:59:29-04:00"
+    },
+    "DXY": {
+      "last": "2026-10-23",
+      "fetched_at_ny": "2026-10-25T03:59:29-04:00"
+    },
+    "DFII10": {
+      "last": "2026-10-22",
+      "fetched_at_ny": "2026-10-25T03:59:29-04:00"
+    }
+  },
+  "latest": {
+    "date": "2026-10-23",
+    "corr20": 0.435731990921578,
+    "corr60": 0.3164333670304314,
+    "corr60_robust": 0.34081287036626673,
+    "state20": "neutral",
+    "state60": "liquidity (+)"
+  },
+  "distribution": {
+    "corr20": {
+      "mean": 0.05602350780397675,
+      "median": 0.07131151246952036,
+      "share_positive": 0.5710659898477157,
+      "share_liquidity": 0.13977519941986946,
+      "share_haven": 0.08828861493836113
+    },
+    "corr60": {
+      "mean": 0.05473117477315882,
+      "median": 0.050583586655350475,
+      "share_positive": 0.5656272661348803,
+      "share_liquidity": 0.23640319071791152,
+      "share_haven": 0.11602610587382162
+    }
+  },
+  "null_models": {
+    "full_sample_rho": 0.060348510431419956,
+    "w20": {
+      "critical_r": 0.44252780662189833,
+      "observed": {
+        "sign_flips_per_year": 14.990722212115699,
+        "share_abs_above_crit": 0.22806381435823062,
+        "significant_flips": 36,
+        "std": 0.3352059079166701
+      },
+      "gaussian_const_rho": {
+        "sign_flips_per_year": [
+          22.79583045297435,
+          20.53087138439149,
+          25.216045115517556
+        ],
+        "share_abs_above_crit": [
+          0.05886209813874789,
+          0.044017403915881076,
+          0.07525380710659899
+        ],
+        "significant_flips": [
+          23.5,
+          16.0,
+          32.0
+        ],
+        "std": 0.2296326820084615
+      },
+      "circular_shift": {
+        "sign_flips_per_year": [
+          22.882321266145173,
+          20.306239767145716,
+          24.984537020192832
+        ],
+        "share_abs_above_crit": [
+          0.05054387237128354,
+          0.03731870920957216,
+          0.06601704133430022
+        ],
+        "significant_flips": [
+          26.526666666666667,
+          18.0,
+          34.0
+        ],
+        "std": 0.22931735039313597
+      }
+    },
+    "w60": {
+      "critical_r": 0.25392916518337916,
+      "observed": {
+        "sign_flips_per_year": 5.633864760857614,
+        "share_abs_above_crit": 0.35242929659173317,
+        "significant_flips": 16,
+        "std": 0.2641288534468315
+      },
+      "gaussian_const_rho": {
+        "sign_flips_per_year": [
+          11.824343045629467,
+          9.74150632215503,
+          14.269378779549202
+        ],
+        "share_abs_above_crit": [
+          0.07664068165337201,
+          0.048332124728063815,
+          0.1089738941261784
+        ],
+        "significant_flips": [
+          6.46,
+          2.0,
+          12.0
+        ],
+        "std": 0.13055545750784747
+      },
+      "circular_shift": {
+        "sign_flips_per_year": [
+          12.717449147883453,
+          10.665090709180868,
+          14.962067069818582
+        ],
+        "share_abs_above_crit": [
+          0.048961203770848435,
+          0.027728426395939088,
+          0.07561638868745468
+        ],
+        "significant_flips": [
+          9.556666666666667,
+          5.0,
+          14.0
+        ],
+        "std": 0.12970640500041694
+      }
+    }
+  },
+  "episodes60": {
+    "count": 87,
+    "liquidity": 52,
+    "haven": 35,
+    "median_days": 6.0,
+    "max_days": 181,
+    "at_least_20d": 24,
+    "at_least_20d_liquidity": 14,
+    "at_least_20d_haven": 10
+  },
+  "ex_ante": {
+    "w20": {
+      "corr_now_vs_next_all": 0.42577478158004545,
+      "corr_now_vs_next_nonoverlap": 0.40919393899363815,
+      "n_nonoverlap": 274,
+      "transition_nonoverlap": {
+        "safe-haven (-)": {
+          "safe-haven (-)": 0.238,
+          "neutral": 0.714,
+          "liquidity (+)": 0.048
+        },
+        "neutral": {
+          "safe-haven (-)": 0.074,
+          "neutral": 0.829,
+          "liquidity (+)": 0.097
+        },
+        "liquidity (+)": {
+          "safe-haven (-)": 0.0,
+          "neutral": 0.568,
+          "liquidity (+)": 0.432
+        }
+      }
+    },
+    "w60": {
+      "corr_now_vs_next_all": 0.32122399594986856,
+      "corr_now_vs_next_nonoverlap": 0.36325003408731193,
+      "n_nonoverlap": 90,
+      "transition_nonoverlap": {
+        "safe-haven (-)": {
+          "safe-haven (-)": 0.333,
+          "neutral": 0.556,
+          "liquidity (+)": 0.111
+        },
+        "neutral": {
+          "safe-haven (-)": 0.097,
+          "neutral": 0.71,
+          "liquidity (+)": 0.194
+        },
+        "liquidity (+)": {
+          "safe-haven (-)": 0.0,
+          "neutral": 0.632,
+          "liquidity (+)": 0.368
+        }
+      }
+    },
+    "tail_days": {
+      "qqq_cutoff": -0.021896056906236527,
+      "by_prior_state": {
+        "all": {
+          "n": 276,
+          "gld_mean_bp": -1.4172176812089987,
+          "gld_t_stat": -0.13191140709386986,
+          "gld_hit_rate": 0.4601449275362319,
+          "qqq_mean_bp": -328.1687812679529
+        },
+        "liquidity (+)": {
+          "n": 56,
+          "gld_mean_bp": -51.8115655004403,
+          "gld_t_stat": -2.5305147103284287,
+          "gld_hit_rate": 0.23214285714285715,
+          "qqq_mean_bp": -305.2230350874538
+        },
+        "neutral": {
+          "n": 165,
+          "gld_mean_bp": -3.949807779412404,
+          "gld_t_stat": -0.33168312186970245,
+          "gld_hit_rate": 0.48484848484848486,
+          "qqq_mean_bp": -316.64466775215783
+        },
+        "safe-haven (-)": {
+          "n": 55,
+          "gld_mean_bp": 57.49116130207309,
+          "gld_t_stat": 1.725192121453879,
+          "gld_hit_rate": 0.6181818181818182,
+          "qqq_mean_bp": -386.1040633809374
+        }
+      }
+    },
+    "next_60d_nonoverlap": {
+      "liquidity (+)": {
+        "n": 19,
+        "corr_next_mean": 0.19909591928753284,
+        "div_ratio_next_mean": 0.7799287871008822,
+        "n_qqq_down": 4,
+        "gld_next_when_qqq_down_mean": 0.06001438116141666
+      },
+      "neutral": {
+        "n": 61,
+        "corr_next_mean": 0.015715645401157895,
+        "div_ratio_next_mean": 0.7211818289962059,
+        "n_qqq_down": 15,
+        "gld_next_when_qqq_down_mean": 0.03996921463118328
+      },
+      "safe-haven (-)": {
+        "n": 10,
+        "corr_next_mean": -0.047358023704112254,
+        "div_ratio_next_mean": 0.6968226749054961,
+        "n_qqq_down": 3,
+        "gld_next_when_qqq_down_mean": -0.09508877579097448
+      }
+    }
+  },
+  "robustness": {
+    "iau_vs_gld_corr60_max_abs_diff": 0.07090107315979868,
+    "iau_vs_gld_corr60_mean_abs_diff": 0.008520463594978597,
+    "lead_lag_corr_qqq_t_vs_gold_t_plus_k": {
+      "GLD": {
+        "-1": -0.0287,
+        "0": 0.0606,
+        "1": 0.0398
+      },
+      "GC_F": {
+        "-1": -0.0116,
+        "0": 0.0339,
+        "1": 0.0478
+      }
+    },
+    "gcf_vs_gld_corr60_mean_abs_diff": 0.06818034308375463,
+    "gcf_vs_gld_corr60_mean_diff": -0.03098817169606278,
+    "weekly13_vs_daily60": {
+      "corr": 0.7121477392439726,
+      "sign_agreement": 0.7570671378091873,
+      "full_sample_weekly_corr": 0.06814713131240824,
+      "full_sample_daily_corr": 0.060348510431419956
+    }
+  },
+  "outlier_sensitivity": {
+    "corr_raw_vs_robust": 0.9783922790712114,
+    "mean_abs_diff": 0.03440058415864388,
+    "state_agreement": 0.9404083134081295,
+    "opposite_state_share": 0.0,
+    "max_1d_jump_raw": 0.41853849207787847,
+    "max_1d_jump_raw_date": "2025-07-08",
+    "max_1d_jump_robust": 0.31236476224469545,
+    "p99_1d_jump_raw": 0.10952533353699849,
+    "p99_1d_jump_robust": 0.10227248519877785,
+    "significant_flips_robust": 18
+  }
+}

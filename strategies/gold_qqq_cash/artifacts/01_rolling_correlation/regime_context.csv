@@ -1,0 +1,4 @@
+state,windows,qqq_ret_med,gld_ret_med,vix_mean_med,d_real_yield_bp_med,abs_d_real_yield_bp_med,d_dxy_med,share_both_up,share_both_down,share_qqq_down_gld_up
+safe-haven (-),640,0.0274,0.0389,18.4804,-7.5000,22.0000,0.0018,0.4484,0.1422,0.2766
+neutral,3512,0.0444,0.0168,16.0233,1.0000,20.0000,0.0047,0.4302,0.0923,0.1646
+liquidity (+),1304,0.0524,0.0323,20.3040,-3.0000,23.0000,-0.0081,0.4709,0.0874,0.1618

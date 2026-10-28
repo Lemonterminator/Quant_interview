@@ -1,0 +1,3 @@
+# Raw vendor data is re-downloadable and not ours to redistribute; the
+# committed data/manifest.json records what a run used.
+data/raw/
